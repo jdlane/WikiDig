@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ArticleReveal } from './components/ArticleReveal';
+import { DevControls } from './components/DevControls';
 import { GuessForm } from './components/GuessForm';
 import { Header } from './components/Header';
 import { HowToPlay } from './components/HowToPlay';
@@ -29,6 +30,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {import.meta.env.DEV && <DevControls dateKey={todayKey} />}
       <Header onHelp={() => setModal('help')} onStats={() => setModal('stats')} />
       <main className="main">
         <PuzzleCard puzzleNumber={puzzleNumber} dateKey={todayKey} title={displayTitle} />

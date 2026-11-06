@@ -32,6 +32,16 @@ export function saveResult(dateKey: string, result: StoredResult): void {
   }
 }
 
+export function clearResult(dateKey: string): void {
+  const all = readAll();
+  delete all[dateKey];
+  try {
+    localStorage.setItem(RESULTS_KEY, JSON.stringify(all));
+  } catch {
+    /* ignore */
+  }
+}
+
 export interface Stats {
   played: number;
   averageDepth: number;

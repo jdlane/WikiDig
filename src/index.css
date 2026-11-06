@@ -54,6 +54,40 @@ body {
   padding: 0 16px 48px;
 }
 
+/* Dev toolbar */
+.dev-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.dev-controls button {
+  font: inherit;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.dev-tag {
+  font-weight: 700;
+  color: var(--miss);
+}
+
+.dev-date {
+  font-variant-numeric: tabular-nums;
+  padding: 0 4px;
+}
+
 /* Header */
 .header {
   display: flex;

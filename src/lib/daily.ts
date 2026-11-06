@@ -19,6 +19,12 @@ export function getTodayKey(now = new Date()): string {
   return toDateKey(now);
 }
 
+/** Date key `days` away from `dateKey` (negative to go back). */
+export function shiftDateKey(dateKey: string, days: number): string {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return toDateKey(new Date(y, m - 1, d + days));
+}
+
 function dayNumber(dateKey: string): number {
   const [y, m, d] = dateKey.split('-').map(Number);
   return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { getPuzzleForDate, getPuzzleNumber } from './daily';
+import { LAUNCH_DATE } from '../data/puzzles';
+import { getPuzzleForDate, getPuzzleNumber, shiftDateKey } from './daily';
+
+describe('shiftDateKey', () => {
+  it('crosses month and year boundaries', () => {
+    expect(shiftDateKey('2026-11-30', 1)).toBe('2026-12-01');
+    expect(shiftDateKey('2027-01-01', -1)).toBe('2026-12-31');
+  });
+});
 
 const puzzles = [{ title: 'A' }, { title: 'B' }, { title: 'C' }, { date: '2026-12-25', title: 'Christmas' }];
 
@@ -22,7 +30,7 @@ describe('getPuzzleForDate', () => {
 
 describe('getPuzzleNumber', () => {
   it('counts from launch day', () => {
-    expect(getPuzzleNumber('2026-11-01')).toBe(1);
-    expect(getPuzzleNumber('2026-11-06')).toBe(6);
+    expect(getPuzzleNumber(LAUNCH_DATE)).toBe(1);
+    expect(getPuzzleNumber(shiftDateKey(LAUNCH_DATE, 5))).toBe(6);
   });
 });
