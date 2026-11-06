@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { msUntilNextPuzzle } from '../lib/daily';
-import { depthPercent, depthScore, type GuessResult } from '../lib/scoring';
+import { depthPercent, depthScore } from '../lib/scoring';
 import { buildShareText } from '../lib/share';
+import type { StoredResult } from '../lib/storage';
+import { Lives } from './GuessForm';
 
 interface Props {
-  result: GuessResult;
+  result: StoredResult;
   puzzleNumber: number;
   title: string;
 }
@@ -21,6 +23,7 @@ export function ResultView({ result, puzzleNumber, title }: Props) {
   const [copied, setCopied] = useState(false);
   const [remaining, setRemaining] = useState(msUntilNextPuzzle());
   const found = result.index >= 0;
+  const misses = result.misses ?? [];
   const pct = depthPercent(result.depth);
 
   useEffect(() => {
@@ -47,7 +50,20 @@ export function ResultView({ result, puzzleNumber, title }: Props) {
           {found && <div className="depth-marker" style={{ top: `${pct}%` }} />}
         </div>
         <div className="result-text">
-          <div className="result-guess">“{result.guess}”</div>
+          <div className="result-guess">
+            {found ? `“${result.guess}”` : 'Out of lives'} <Lives used={misses.length} />
+          </div>
+          {misses.length > 0 && (
+            <div className="muted missed-list">
+              Missed:{' '}
+              {misses.map((m, i) => (
+                <span key={m}>
+                  {i > 0 && ', '}
+                  <s>{m}</s>
+                </span>
+              ))}
+            </div>
+          )}
           {found ? (
             <>
               <div className="result-score">{depthScore(result.depth).toLocaleString()}</div>
@@ -58,7 +74,7 @@ export function ResultView({ result, puzzleNumber, title }: Props) {
           ) : (
             <>
               <div className="result-score miss">0</div>
-              <div className="muted">points · that word isn't in the article.</div>
+              <div className="muted">points · none of your guesses were in the article.</div>
             </>
           )}
         </div>

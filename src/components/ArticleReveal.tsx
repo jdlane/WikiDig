@@ -1,6 +1,6 @@
 import { createElement, memo, useEffect, useRef } from 'react';
 import type { Article } from '../lib/extractText';
-import { normalizeWord } from '../lib/scoring';
+import { sharesKey, wordKeys } from '../lib/scoring';
 import { articleUrl } from '../lib/wikipedia';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 export const ArticleReveal = memo(function ArticleReveal({ article, title, revisionId, guess, firstIndex }: Props) {
   const firstRef = useRef<HTMLElement>(null);
-  const target = normalizeWord(guess);
+  const target = wordKeys(guess);
 
   useEffect(() => {
     firstRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -34,7 +34,7 @@ export const ArticleReveal = memo(function ArticleReveal({ article, title, revis
             block.type === 'li' ? 'p' : block.type,
             { key: i, className: block.type === 'li' ? 'article-li' : undefined },
             block.segments.map((seg, j) => {
-              if (seg.wordIndex === undefined || article.words[seg.wordIndex] !== target) return seg.text;
+              if (seg.wordIndex === undefined || !sharesKey(article.keys[seg.wordIndex], target)) return seg.text;
               const isFirst = seg.wordIndex === firstIndex;
               return (
                 <mark key={j} ref={isFirst ? firstRef : undefined} className={isFirst ? 'hit first' : 'hit'}>

@@ -166,10 +166,57 @@ body {
 }
 
 /* Guess form */
+.guess-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
 .guess-label {
   display: block;
-  margin-bottom: 10px;
   font-weight: 500;
+}
+
+.lives {
+  white-space: nowrap;
+  font-size: 1.2rem;
+  line-height: 1;
+  letter-spacing: 2px;
+}
+
+.life {
+  color: var(--miss);
+}
+
+.life.lost {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.result-guess .lives {
+  font-size: 1rem;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.miss-text {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--miss) 12%, transparent);
+  color: var(--miss);
+  font-size: 0.9rem;
+}
+
+.missed-list {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+}
+
+.result-text .missed-list {
+  margin: 2px 0 6px;
 }
 
 .guess-row {

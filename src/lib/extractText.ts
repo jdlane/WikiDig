@@ -1,4 +1,4 @@
-import { WORD_RE, normalizeWord } from './scoring';
+import { WORD_RE, wordKeys } from './scoring';
 
 export type BlockType = 'h2' | 'h3' | 'h4' | 'p' | 'li';
 
@@ -15,9 +15,9 @@ export interface Block {
 
 export interface Article {
   blocks: Block[];
-  /** Normalized words in reading order; position in this array is the score basis. */
-  words: string[];
-  /** Words as written in the article, parallel to `words`. */
+  /** Each word's family keys (see wordKeys), in reading order; position is the score basis. */
+  keys: string[][];
+  /** Words as written in the article, parallel to `keys`. */
   originals: string[];
 }
 
@@ -77,31 +77,42 @@ function cleanText(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+/** URLs and bare domains (beekeeping.com): shown in the reveal, but never counted as words. */
+const URL_RE = /(?:https?:\/\/|www\.)\S+|[\p{L}\d-]+(?:\.[\p{L}\d-]+)*\.(?:com|org|net|edu|gov|int|info|io|co|uk)\b(?:\/\S*)?/iu;
+const TOKEN_RE = new RegExp(`(${URL_RE.source})|${WORD_RE.source}`, 'giu');
+
+const HEADING_LEVEL: Partial<Record<BlockType, number>> = { h2: 2, h3: 3, h4: 4 };
+
+interface RawBlock {
+  type: BlockType;
+  text: string;
+}
+
+/** Drop headings whose section ended up empty (e.g. "Gallery" once the images are removed). */
+function dropEmptySections(raw: RawBlock[]): RawBlock[] {
+  return raw.filter((block, i) => {
+    const level = HEADING_LEVEL[block.type];
+    if (level === undefined) return true;
+    for (const next of raw.slice(i + 1)) {
+      const nextLevel = HEADING_LEVEL[next.type];
+      if (nextLevel === undefined) return true; // found content
+      if (nextLevel <= level) return false; // section closed with nothing in it
+    }
+    return false;
+  });
+}
+
 export function extractArticle(html: string): Article {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const root = doc.querySelector('.mw-parser-output') ?? doc.body;
   root.querySelectorAll(REMOVE_SELECTORS.join(',')).forEach((el) => el.remove());
 
-  const blocks: Block[] = [];
-  const words: string[] = [];
-  const originals: string[] = [];
+  const raw: RawBlock[] = [];
   let stopped = false;
 
   function addBlock(type: BlockType, rawText: string) {
     const text = cleanText(rawText);
-    if (!text) return;
-    const segments: Segment[] = [];
-    let last = 0;
-    for (const match of text.matchAll(WORD_RE)) {
-      const start = match.index!;
-      if (start > last) segments.push({ text: text.slice(last, start) });
-      segments.push({ text: match[0], wordIndex: words.length });
-      words.push(normalizeWord(match[0]));
-      originals.push(match[0]);
-      last = start + match[0].length;
-    }
-    if (last < text.length) segments.push({ text: text.slice(last) });
-    blocks.push({ type, segments });
+    if (text) raw.push({ type, text });
   }
 
   function handleHeading(h: Element) {
@@ -150,5 +161,24 @@ export function extractArticle(html: string): Article {
   }
 
   walk(root);
-  return { blocks, words, originals };
+
+  const blocks: Block[] = [];
+  const keys: string[][] = [];
+  const originals: string[] = [];
+  for (const { type, text } of dropEmptySections(raw)) {
+    const segments: Segment[] = [];
+    let last = 0;
+    for (const match of text.matchAll(TOKEN_RE)) {
+      if (match[1]) continue; // URL: left inside the surrounding plain-text segment
+      const start = match.index!;
+      if (start > last) segments.push({ text: text.slice(last, start) });
+      segments.push({ text: match[0], wordIndex: keys.length });
+      keys.push(wordKeys(match[0]));
+      originals.push(match[0]);
+      last = start + match[0].length;
+    }
+    if (last < text.length) segments.push({ text: text.slice(last) });
+    blocks.push({ type, segments });
+  }
+  return { blocks, keys, originals };
 }

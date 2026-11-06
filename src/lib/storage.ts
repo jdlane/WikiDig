@@ -2,44 +2,65 @@ import type { GuessResult } from './scoring';
 import { toDateKey } from './daily';
 
 const RESULTS_KEY = 'wikidepth:results';
+const MISSES_KEY = 'wikidepth:misses';
 const SEEN_RULES_KEY = 'wikidepth:seenRules';
 
 export interface StoredResult extends GuessResult {
   title: string;
+  /** Guesses that weren't in the article, in order. Absent on results saved before lives existed. */
+  misses?: string[];
 }
 
 type ResultMap = Record<string, StoredResult>;
+type MissMap = Record<string, string[]>;
 
-function readAll(): ResultMap {
+function readMap<T>(key: string): Record<string, T> {
   try {
-    return JSON.parse(localStorage.getItem(RESULTS_KEY) ?? '{}') as ResultMap;
+    return JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, T>;
   } catch {
     return {};
   }
 }
+
+function writeMap<T>(key: string, map: Record<string, T>): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(map));
+  } catch {
+    /* storage unavailable: progress lasts only for this session */
+  }
+}
+
+const readAll = () => readMap<StoredResult>(RESULTS_KEY);
 
 export function getResult(dateKey: string): StoredResult | null {
   return readAll()[dateKey] ?? null;
 }
 
 export function saveResult(dateKey: string, result: StoredResult): void {
-  const all = readAll();
+  const all: ResultMap = readAll();
   all[dateKey] = result;
-  try {
-    localStorage.setItem(RESULTS_KEY, JSON.stringify(all));
-  } catch {
-    /* storage unavailable: result lasts only for this session */
-  }
+  writeMap(RESULTS_KEY, all);
 }
 
+/** Missed guesses for a day still in progress. */
+export function getMisses(dateKey: string): string[] {
+  return readMap<string[]>(MISSES_KEY)[dateKey] ?? [];
+}
+
+export function saveMisses(dateKey: string, misses: string[]): void {
+  const all: MissMap = readMap<string[]>(MISSES_KEY);
+  all[dateKey] = misses;
+  writeMap(MISSES_KEY, all);
+}
+
+/** Forget everything about a day: final result and lives used. */
 export function clearResult(dateKey: string): void {
-  const all = readAll();
-  delete all[dateKey];
-  try {
-    localStorage.setItem(RESULTS_KEY, JSON.stringify(all));
-  } catch {
-    /* ignore */
-  }
+  const results: ResultMap = readAll();
+  delete results[dateKey];
+  writeMap(RESULTS_KEY, results);
+  const misses: MissMap = readMap<string[]>(MISSES_KEY);
+  delete misses[dateKey];
+  writeMap(MISSES_KEY, misses);
 }
 
 export interface Stats {

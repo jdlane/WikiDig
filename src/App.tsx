@@ -18,7 +18,7 @@ export default function App() {
   const todayKey = useMemo(() => getTodayKey(), []);
   const puzzle = useMemo(() => getPuzzleForDate(todayKey), [todayKey]);
   const puzzleNumber = getPuzzleNumber(todayKey);
-  const { state, result, submitGuess, retry } = useDailyPuzzle(todayKey, puzzle);
+  const { state, result, misses, submitGuess, retry } = useDailyPuzzle(todayKey, puzzle);
   const [modal, setModal] = useState<ModalName>(() => (hasSeenRules() ? null : 'help'));
 
   const closeModal = () => {
@@ -45,7 +45,13 @@ export default function App() {
         )}
 
         {!result && state.status !== 'error' && (
-          <GuessForm disabled={state.status !== 'ready'} onSubmit={submitGuess} />
+          // Remount after each miss so the input clears and the confirm step resets.
+          <GuessForm
+            key={misses.length}
+            disabled={state.status !== 'ready'}
+            misses={misses}
+            onSubmit={submitGuess}
+          />
         )}
 
         {result && (

@@ -1,12 +1,80 @@
 import { describe, expect, it } from 'vitest';
-import { computeScore, depthScore, normalizeWord, topAnswers, validateGuess } from './scoring';
+import {
+  MAX_LIVES,
+  applyGuess,
+  computeScore,
+  depthScore,
+  normalizeWord,
+  sameWord,
+  topAnswers,
+  validateGuess,
+  wordKeys,
+} from './scoring';
+import { loadWordForms } from './wordForms';
 
-const words = ['the', 'cafe', 'is', 'near', 'the', "o'brien", 'house'];
+await loadWordForms();
+
+const words = ['the', 'cafe', 'is', 'near', 'the', "o'brien", 'house'].map(wordKeys);
 
 describe('normalizeWord', () => {
   it('lowercases, strips accents and unifies apostrophes', () => {
     expect(normalizeWord('Café')).toBe('cafe');
     expect(normalizeWord('O’Brien')).toBe("o'brien");
+  });
+});
+
+describe('sameWord', () => {
+  const same = (a: string, b: string) => expect(sameWord(a, b), `${a} ~ ${b}`).toBe(true);
+  const different = (a: string, b: string) => expect(sameWord(a, b), `${a} ≁ ${b}`).toBe(false);
+
+  it('joins plurals and case', () => {
+    same('Beehive', 'beehives');
+    same('octopus', 'octopuses');
+    same('bee', 'Bees');
+    same('colony', 'colonies');
+    same('mouse', 'mice');
+    same('child', 'children');
+    same('larva', 'larvae');
+  });
+
+  it('joins tenses, including irregular ones', () => {
+    same('pollinate', 'pollinated');
+    same('run', 'running');
+    same('run', 'ran');
+    same('write', 'wrote');
+    same('write', 'written');
+    same('be', 'was');
+    same('study', 'studies');
+  });
+
+  it('joins agent nouns and activities', () => {
+    same('beekeeper', 'beekeeping');
+    same('beekeepers', 'beekeeping');
+    same('farmer', 'farming');
+    same('writer', 'write');
+    same('runner', 'running');
+  });
+
+  it('joins -ation and -ction nouns to their verbs', () => {
+    same('pollination', 'pollinate');
+    same('formation', 'formed');
+    same('protection', 'protecting');
+  });
+
+  it('ignores possessives', () => {
+    same("queen's", 'queen');
+  });
+
+  it('keeps look-alike words apart', () => {
+    different('flower', 'flow');
+    different('letter', 'let');
+    different('tower', 'tow');
+    different('universe', 'university');
+    different('news', 'new');
+    different('general', 'generate');
+    different('station', 'state');
+    different('question', 'quest');
+    different('nation', 'nate');
   });
 });
 
@@ -23,8 +91,12 @@ describe('computeScore', () => {
     expect(computeScore(words, 'house').depth).toBeCloseTo(6 / 7);
   });
 
+  it('matches other forms of a word', () => {
+    expect(computeScore(words, 'houses')).toMatchObject({ index: 6 });
+  });
+
   it('gives 0 when the word is missing', () => {
-    expect(computeScore(words, 'houses')).toMatchObject({ index: -1, depth: 0 });
+    expect(computeScore(words, 'garden')).toMatchObject({ index: -1, depth: 0 });
   });
 });
 
@@ -47,6 +119,30 @@ describe('topAnswers', () => {
     const all = topAnswers(words, originals, 10);
     expect(all).toHaveLength(6);
     expect(all.at(-1)).toMatchObject({ word: 'The', index: 0 });
+  });
+});
+
+describe('applyGuess', () => {
+  it('ends the game on the first word that is in the article', () => {
+    const out = applyGuess(words, ['zebra'], 'house');
+    expect(out.misses).toEqual(['zebra']);
+    expect(out.final).toMatchObject({ guess: 'house', index: 6 });
+  });
+
+  it('costs a life and continues when the word is missing', () => {
+    expect(applyGuess(words, [], 'zebra')).toEqual({ misses: ['zebra'], final: null });
+  });
+
+  it('scores 0 once all lives are gone', () => {
+    const out = applyGuess(words, ['zebra', 'yak'], 'xylophone');
+    expect(out.misses).toHaveLength(MAX_LIVES);
+    expect(out.final).toMatchObject({ index: -1, depth: 0 });
+  });
+
+  it('does not charge a life for repeating a miss, in any form', () => {
+    const misses = ['zebra'];
+    expect(applyGuess(words, misses, 'ZEBRA')).toEqual({ misses, final: null });
+    expect(applyGuess(words, misses, 'zebras')).toEqual({ misses, final: null });
   });
 });
 

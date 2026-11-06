@@ -1,3 +1,5 @@
+import { wordFamilies } from './wordForms';
+
 /** A word: letters (with combining marks), optionally joined by internal apostrophes (don't, O'Brien). */
 export const WORD_RE = /\p{L}[\p{L}\p{M}]*(?:['’]\p{L}[\p{L}\p{M}]*)*/gu;
 const SINGLE_WORD_RE = /^\p{L}[\p{L}\p{M}]*(?:['’]\p{L}[\p{L}\p{M}]*)*$/u;
@@ -11,6 +13,26 @@ export function normalizeWord(word: string): string {
     .toLowerCase();
 }
 
+/**
+ * Family keys for a word; two words are the same if their keys overlap
+ * (case, accents, plurals, tenses and some suffixes ignored — see wordForms.ts).
+ * Requires loadWordForms() to have resolved.
+ */
+export function wordKeys(word: string): string[] {
+  return wordFamilies(normalizeWord(word.trim()));
+}
+
+export function sharesKey(a: string[], b: string[]): boolean {
+  return a.some((k) => b.includes(k));
+}
+
+export function sameWord(a: string, b: string): boolean {
+  return sharesKey(wordKeys(a), wordKeys(b));
+}
+
+/** Guesses not found in the article cost a life; running out scores 0. */
+export const MAX_LIVES = 3;
+
 /** Returns an error message, or null if the guess is acceptable. */
 export function validateGuess(raw: string): string | null {
   const guess = raw.trim();
@@ -20,9 +42,10 @@ export function validateGuess(raw: string): string | null {
   return null;
 }
 
-/** Index of the first occurrence of `guess` in the normalized word list, or -1. */
-export function findFirstOccurrence(words: string[], guess: string): number {
-  return words.indexOf(normalizeWord(guess.trim()));
+/** Index of the first word in the article (as per-word keys) that is a form of `guess`, or -1. */
+export function findFirstOccurrence(keys: string[][], guess: string): number {
+  const target = wordKeys(guess);
+  return keys.findIndex((k) => sharesKey(k, target));
 }
 
 export interface GuessResult {
@@ -34,15 +57,30 @@ export interface GuessResult {
   depth: number;
 }
 
-export function computeScore(words: string[], guess: string): GuessResult {
-  const index = findFirstOccurrence(words, guess);
-  const total = words.length;
+export function computeScore(keys: string[][], guess: string): GuessResult {
+  const index = findFirstOccurrence(keys, guess);
+  const total = keys.length;
   return {
     guess: guess.trim(),
     index,
     total,
     depth: index < 0 || total === 0 ? 0 : index / total,
   };
+}
+
+export interface GuessOutcome {
+  misses: string[];
+  /** Set when the game is over: a word in the article, or the last life lost (index -1). */
+  final: GuessResult | null;
+}
+
+/** Apply one guess under the lives rule. Repeating (any form of) an earlier miss is a no-op. */
+export function applyGuess(keys: string[][], misses: string[], guess: string): GuessOutcome {
+  if (misses.some((m) => sameWord(m, guess))) return { misses, final: null };
+  const scored = computeScore(keys, guess);
+  if (scored.index >= 0) return { misses, final: scored };
+  const nextMisses = [...misses, scored.guess];
+  return { misses: nextMisses, final: nextMisses.length >= MAX_LIVES ? scored : null };
 }
 
 export function depthPercent(depth: number): number {
@@ -61,18 +99,19 @@ export interface TopAnswer {
   depth: number;
 }
 
-/** The `n` distinct words whose first occurrence is deepest, best first. */
-export function topAnswers(words: string[], originals: string[], n = 10): TopAnswer[] {
+/**
+ * The `n` deepest words that are new where they appear (no form of them occurs earlier),
+ * best first. Guessing any of them scores exactly that position.
+ */
+export function topAnswers(keys: string[][], originals: string[], n = 10): TopAnswer[] {
   const seen = new Set<string>();
   const firsts: number[] = [];
-  words.forEach((w, i) => {
-    if (!seen.has(w)) {
-      seen.add(w);
-      firsts.push(i);
-    }
+  keys.forEach((k, i) => {
+    if (!k.some((key) => seen.has(key))) firsts.push(i);
+    k.forEach((key) => seen.add(key));
   });
   return firsts
     .slice(-n)
     .reverse()
-    .map((index) => ({ word: originals[index], index, depth: index / words.length }));
+    .map((index) => ({ word: originals[index], index, depth: index / keys.length }));
 }

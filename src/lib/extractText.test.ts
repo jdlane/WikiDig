@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { extractArticle } from './extractText';
+import { loadWordForms } from './wordForms';
+
+await loadWordForms();
 
 const FIXTURE = `
 <div class="mw-parser-output">
@@ -21,17 +24,40 @@ describe('extractArticle', () => {
   const article = extractArticle(FIXTURE);
 
   it('keeps prose, headings and list items in order', () => {
-    expect(article.words).toEqual([
-      'the', 'octopus', 'is', 'a', 'mollusc', 'it', 'has', 'eight', 'arms',
-      'anatomy',
-      'octopuses', 'have', 'three', 'hearts',
-      'ink', 'sac', 'nested', 'item', 'beak',
+    expect(article.originals).toEqual([
+      'The', 'octopus', 'is', 'a', 'mollusc', 'It', 'has', 'eight', 'arms',
+      'Anatomy',
+      'Octopuses', 'have', 'three', 'hearts',
+      'Ink', 'sac', 'Nested', 'item', 'Beak',
     ]);
   });
 
+  it('stores family keys, so word forms share a key', () => {
+    expect(article.keys).toHaveLength(article.originals.length);
+    expect(article.keys[10]).toContain('octopus'); // Octopuses
+    expect(article.keys[1]).toContain('octopus');
+  });
+
+  it('drops headings of empty sections and does not count web addresses', () => {
+    const html = `<div class="mw-parser-output">
+      <p>Founded beekeeping.com and www.bees.org/hive in 1996.</p>
+      <div class="mw-heading mw-heading2"><h2>History</h2></div>
+      <div class="mw-heading mw-heading3"><h3>Empty subsection</h3></div>
+      <p>Bees.</p>
+      <div class="mw-heading mw-heading2"><h2>Gallery</h2></div>
+      <ul class="gallery"><li>Image</li></ul>
+    </div>`;
+    const a = extractArticle(html);
+    expect(a.originals).toEqual(['Founded', 'and', 'in', 'History', 'Empty', 'subsection', 'Bees']);
+    expect(a.blocks[0].segments.map((s) => s.text).join('')).toBe(
+      'Founded beekeeping.com and www.bees.org/hive in 1996.',
+    );
+  });
+
   it('excludes citations, infoboxes, captions, hatnotes and end sections', () => {
+    const lower = article.originals.map((w) => w.toLowerCase());
     for (const w of ['citation', 'needed', 'kingdom', 'caption', 'uses', 'squid', 'smith', 'short']) {
-      expect(article.words).not.toContain(w);
+      expect(lower).not.toContain(w);
     }
   });
 
