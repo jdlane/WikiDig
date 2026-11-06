@@ -9,22 +9,23 @@ describe('shiftDateKey', () => {
   });
 });
 
-const puzzles = [{ title: 'A' }, { title: 'B' }, { title: 'C' }, { date: '2026-12-25', title: 'Christmas' }];
+const pool = [{ title: 'A' }, { title: 'B' }, { title: 'C' }];
+const day = (n: number) => shiftDateKey(LAUNCH_DATE, n - 1);
 
 describe('getPuzzleForDate', () => {
-  it('is deterministic per date', () => {
-    expect(getPuzzleForDate('2026-11-10', puzzles)).toBe(getPuzzleForDate('2026-11-10', puzzles));
+  it('plays pool entries in order from launch day', () => {
+    expect([1, 2, 3].map((n) => getPuzzleForDate(day(n), pool, []).title)).toEqual(['A', 'B', 'C']);
   });
 
-  it('prefers an exact date match', () => {
-    expect(getPuzzleForDate('2026-12-25', puzzles).title).toBe('Christmas');
+  it('wraps around when the pool runs out, and before launch', () => {
+    expect(getPuzzleForDate(day(4), pool, []).title).toBe('A');
+    expect(getPuzzleForDate(day(0), pool, []).title).toBe('C');
   });
 
-  it('never picks a dated puzzle for another day', () => {
-    for (let d = 1; d <= 28; d++) {
-      const key = `2027-02-${String(d).padStart(2, '0')}`;
-      expect(getPuzzleForDate(key, puzzles).title).not.toBe('Christmas');
-    }
+  it('prefers a dated override', () => {
+    const overrides = [{ date: day(2), title: 'Christmas' }];
+    expect(getPuzzleForDate(day(2), pool, overrides).title).toBe('Christmas');
+    expect(getPuzzleForDate(day(3), pool, overrides).title).toBe('C');
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractArticle } from './extractText';
+import { countWords, extractArticle } from './extractText';
 import { loadWordForms } from './wordForms';
 
 await loadWordForms();
@@ -66,6 +66,10 @@ describe('extractArticle', () => {
     const words = first.segments.filter((s) => s.wordIndex !== undefined);
     expect(words[1]).toEqual({ text: 'octopus', wordIndex: 1 });
     expect(first.segments.map((s) => s.text).join('')).toBe('The octopus is a mollusc. It has eight arms.');
+  });
+
+  it('counts words the same way without building the article', () => {
+    expect(countWords(FIXTURE)).toBe(article.originals.length);
   });
 
   it('labels block types', () => {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Puzzle } from '../data/puzzles';
 import { extractArticle, type Article } from '../lib/extractText';
 import { applyGuess } from '../lib/scoring';
-import { getMisses, getResult, saveMisses, saveResult, type StoredResult } from '../lib/storage';
+import type { GameStore, StoredResult } from '../lib/storage';
 import { fetchArticleHtml } from '../lib/wikipedia';
 import { loadWordForms } from '../lib/wordForms';
 
@@ -11,17 +11,39 @@ export type LoadState =
   | { status: 'error'; message: string }
   | { status: 'ready'; article: Article; title: string; revisionId: number };
 
-export function useDailyPuzzle(dateKey: string, puzzle: Puzzle) {
+export interface GameSource {
+  /** Changes whenever a different game starts (a new date, the next endless round). */
+  id: string;
+  /** Which article to play; may pick it (and save the pick) on first call. */
+  loadPuzzle: () => Promise<Puzzle>;
+  store: GameStore;
+}
+
+/** One game: find the article, load it, and play guesses against it under the lives rule. */
+export function useGame({ id, loadPuzzle, store }: GameSource) {
   const [state, setState] = useState<LoadState>({ status: 'loading' });
-  const [result, setResult] = useState<StoredResult | null>(() => getResult(dateKey));
-  const [misses, setMisses] = useState<string[]>(() => getMisses(dateKey));
+  const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
+  const [result, setResult] = useState<StoredResult | null>(() => store.getResult());
+  const [misses, setMisses] = useState<string[]>(() => store.getMisses());
   const [reloadToken, setReloadToken] = useState(0);
+
+  useEffect(() => {
+    setResult(store.getResult());
+    setMisses(store.getMisses());
+    setPuzzle(null);
+    // `store` and `loadPuzzle` are recreated alongside `id`.
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
     setState({ status: 'loading' });
-    // The WordNet data downloads alongside the article; extraction needs both.
-    Promise.all([fetchArticleHtml(puzzle.title, puzzle.revisionId), loadWordForms()])
+    // WordNet downloads alongside the puzzle lookup and article; extraction needs both.
+    const wordForms = loadWordForms();
+    loadPuzzle()
+      .then((p) => {
+        if (!cancelled) setPuzzle(p);
+        return Promise.all([fetchArticleHtml(p.title, p.revisionId), wordForms] as const);
+      })
       .then(([{ html, title, revisionId }]) => {
         if (cancelled) return;
         setState({ status: 'ready', article: extractArticle(html), title, revisionId });
@@ -33,12 +55,7 @@ export function useDailyPuzzle(dateKey: string, puzzle: Puzzle) {
     return () => {
       cancelled = true;
     };
-  }, [puzzle.title, puzzle.revisionId, reloadToken]);
-
-  useEffect(() => {
-    setResult(getResult(dateKey));
-    setMisses(getMisses(dateKey));
-  }, [dateKey]);
+  }, [id, reloadToken]);
 
   const submitGuess = useCallback(
     (guess: string) => {
@@ -46,18 +63,18 @@ export function useDailyPuzzle(dateKey: string, puzzle: Puzzle) {
       const outcome = applyGuess(state.article.keys, misses, guess);
       if (outcome.misses !== misses) {
         setMisses(outcome.misses);
-        saveMisses(dateKey, outcome.misses);
+        store.saveMisses(outcome.misses);
       }
       if (outcome.final) {
         const final: StoredResult = { ...outcome.final, title: state.title, misses: outcome.misses };
-        saveResult(dateKey, final);
+        store.saveResult(final);
         setResult(final);
       }
     },
-    [state, result, misses, dateKey],
+    [state, result, misses, store],
   );
 
   const retry = useCallback(() => setReloadToken((n) => n + 1), []);
 
-  return { state, result, misses, submitGuess, retry };
+  return { state, puzzle, result, misses, submitGuess, retry };
 }

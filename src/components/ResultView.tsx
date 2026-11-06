@@ -7,8 +7,11 @@ import { Lives } from './GuessForm';
 
 interface Props {
   result: StoredResult;
-  puzzleNumber: number;
+  /** First line of the share text, e.g. "Wiki Depth #6". */
+  shareHeading: string;
   title: string;
+  /** Endless mode: offer the next article instead of a countdown. */
+  onNext?: () => void;
 }
 
 function formatCountdown(ms: number): string {
@@ -19,20 +22,23 @@ function formatCountdown(ms: number): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-export function ResultView({ result, puzzleNumber, title }: Props) {
-  const [copied, setCopied] = useState(false);
+function Countdown() {
   const [remaining, setRemaining] = useState(msUntilNextPuzzle());
-  const found = result.index >= 0;
-  const misses = result.misses ?? [];
-  const pct = depthPercent(result.depth);
-
   useEffect(() => {
     const id = setInterval(() => setRemaining(msUntilNextPuzzle()), 1000);
     return () => clearInterval(id);
   }, []);
+  return <p className="muted countdown">Next article in {formatCountdown(remaining)}</p>;
+}
+
+export function ResultView({ result, shareHeading, title, onNext }: Props) {
+  const [copied, setCopied] = useState(false);
+  const found = result.index >= 0;
+  const misses = result.misses ?? [];
+  const pct = depthPercent(result.depth);
 
   const share = async () => {
-    const text = buildShareText(puzzleNumber, title, result);
+    const text = buildShareText(shareHeading, title, result);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -80,11 +86,16 @@ export function ResultView({ result, puzzleNumber, title }: Props) {
         </div>
       </div>
       <div className="button-row">
-        <button className="button primary" onClick={share}>
+        <button className={onNext ? 'button secondary' : 'button primary'} onClick={share}>
           {copied ? 'Copied!' : 'Share result'}
         </button>
+        {onNext && (
+          <button className="button primary" onClick={onNext} autoFocus>
+            Next article →
+          </button>
+        )}
       </div>
-      <p className="muted countdown">Next article in {formatCountdown(remaining)}</p>
+      {!onNext && <Countdown />}
     </section>
   );
 }

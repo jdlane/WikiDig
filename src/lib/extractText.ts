@@ -102,7 +102,8 @@ function dropEmptySections(raw: RawBlock[]): RawBlock[] {
   });
 }
 
-export function extractArticle(html: string): Article {
+/** The article's countable text blocks, in reading order. */
+function collectBlocks(html: string): RawBlock[] {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const root = doc.querySelector('.mw-parser-output') ?? doc.body;
   root.querySelectorAll(REMOVE_SELECTORS.join(',')).forEach((el) => el.remove());
@@ -161,11 +162,23 @@ export function extractArticle(html: string): Article {
   }
 
   walk(root);
+  return dropEmptySections(raw);
+}
 
+/** Number of scorable words, by the same rules as extractArticle (no WordNet needed). */
+export function countWords(html: string): number {
+  let count = 0;
+  for (const { text } of collectBlocks(html)) {
+    for (const match of text.matchAll(TOKEN_RE)) if (!match[1]) count++;
+  }
+  return count;
+}
+
+export function extractArticle(html: string): Article {
   const blocks: Block[] = [];
   const keys: string[][] = [];
   const originals: string[] = [];
-  for (const { type, text } of dropEmptySections(raw)) {
+  for (const { type, text } of collectBlocks(html)) {
     const segments: Segment[] = [];
     let last = 0;
     for (const match of text.matchAll(TOKEN_RE)) {

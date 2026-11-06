@@ -1,4 +1,4 @@
-import { LAUNCH_DATE, PUZZLES, type Puzzle } from '../data/puzzles';
+import { LAUNCH_DATE, OVERRIDES, type DatedPuzzle, type Puzzle } from '../data/puzzles';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -34,22 +34,18 @@ export function getPuzzleNumber(dateKey: string): number {
   return dayNumber(dateKey) - dayNumber(LAUNCH_DATE) + 1;
 }
 
-/** FNV-1a string hash, so undated days get a stable but scrambled pick. */
-function hash(str: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return h >>> 0;
+/** Index into the pool for a day: day 1 → 0. Wraps if the pool runs out (or before launch). */
+export function poolIndexForDate(dateKey: string, poolSize: number): number {
+  const n = getPuzzleNumber(dateKey) - 1;
+  return ((n % poolSize) + poolSize) % poolSize;
 }
 
-export function getPuzzleForDate(dateKey: string, puzzles: Puzzle[] = PUZZLES): Puzzle {
-  const exact = puzzles.find((p) => p.date === dateKey);
-  if (exact) return exact;
-  const pool = puzzles.filter((p) => !p.date);
-  const list = pool.length ? pool : puzzles;
-  return list[hash(dateKey) % list.length];
+export function getPuzzleForDate(
+  dateKey: string,
+  pool: Puzzle[],
+  overrides: DatedPuzzle[] = OVERRIDES,
+): Puzzle {
+  return overrides.find((p) => p.date === dateKey) ?? pool[poolIndexForDate(dateKey, pool.length)];
 }
 
 /** Milliseconds until the next local midnight. */

@@ -1,24 +1,33 @@
-import { useMemo, useState } from 'react';
-import { ArticleReveal } from './components/ArticleReveal';
+import { useCallback, useMemo, useState } from 'react';
 import { DevControls } from './components/DevControls';
-import { GuessForm } from './components/GuessForm';
-import { Header } from './components/Header';
+import { GameScreen } from './components/GameScreen';
+import { Header, type Mode } from './components/Header';
 import { HowToPlay } from './components/HowToPlay';
-import { PuzzleCard } from './components/PuzzleCard';
-import { ResultView } from './components/ResultView';
 import { StatsModal } from './components/StatsModal';
-import { TopAnswers } from './components/TopAnswers';
-import { useDailyPuzzle } from './hooks/useDailyPuzzle';
+import type { GameSource } from './hooks/useGame';
 import { getPuzzleForDate, getPuzzleNumber, getTodayKey } from './lib/daily';
-import { hasSeenRules, markRulesSeen } from './lib/storage';
+import { loadEndlessPuzzle, prefetchNextRandom } from './lib/endless';
+import { loadPool } from './lib/pool';
+import { dailyStore, endlessStore, getEndlessRound, hasSeenRules, markRulesSeen, nextEndlessRound } from './lib/storage';
 
 type ModalName = 'help' | 'stats' | null;
 
+function readMode(): Mode {
+  return new URLSearchParams(window.location.search).get('mode') === 'endless' ? 'endless' : 'daily';
+}
+
+function writeMode(mode: Mode) {
+  const url = new URL(window.location.href);
+  if (mode === 'endless') url.searchParams.set('mode', 'endless');
+  else url.searchParams.delete('mode');
+  window.history.replaceState(null, '', url);
+}
+
 export default function App() {
   const todayKey = useMemo(() => getTodayKey(), []);
-  const puzzle = useMemo(() => getPuzzleForDate(todayKey), [todayKey]);
   const puzzleNumber = getPuzzleNumber(todayKey);
-  const { state, result, misses, submitGuess, retry } = useDailyPuzzle(todayKey, puzzle);
+  const [mode, setMode] = useState<Mode>(readMode);
+  const [endlessRound, setEndlessRound] = useState(() => getEndlessRound().round);
   const [modal, setModal] = useState<ModalName>(() => (hasSeenRules() ? null : 'help'));
 
   const closeModal = () => {
@@ -26,48 +35,57 @@ export default function App() {
     setModal(null);
   };
 
-  const displayTitle = state.status === 'ready' ? state.title : puzzle.title;
+  const changeMode = (next: Mode) => {
+    writeMode(next);
+    setMode(next);
+  };
+
+  const source = useMemo<GameSource>(
+    () =>
+      mode === 'daily'
+        ? {
+            id: `daily:${todayKey}`,
+            loadPuzzle: () => loadPool().then((pool) => getPuzzleForDate(todayKey, pool)),
+            store: dailyStore(todayKey),
+          }
+        : { id: `endless:${endlessRound}`, loadPuzzle: loadEndlessPuzzle, store: endlessStore() },
+    [mode, todayKey, endlessRound],
+  );
+
+  const nextEndless = useCallback(() => {
+    setEndlessRound(nextEndlessRound().round);
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const date = new Date(`${todayKey}T00:00:00`).toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div className="app">
-      {import.meta.env.DEV && <DevControls dateKey={todayKey} />}
-      <Header onHelp={() => setModal('help')} onStats={() => setModal('stats')} />
+      {import.meta.env.DEV && mode === 'daily' && <DevControls dateKey={todayKey} />}
+      <Header mode={mode} onMode={changeMode} onHelp={() => setModal('help')} onStats={() => setModal('stats')} />
       <main className="main">
-        <PuzzleCard puzzleNumber={puzzleNumber} dateKey={todayKey} title={displayTitle} />
-
-        {state.status === 'error' && (
-          <section className="card error-card">
-            <p>Couldn't load the article: {state.message}</p>
-            <button className="button secondary" onClick={retry}>
-              Try again
-            </button>
-          </section>
-        )}
-
-        {!result && state.status !== 'error' && (
-          // Remount after each miss so the input clears and the confirm step resets.
-          <GuessForm
-            key={misses.length}
-            disabled={state.status !== 'ready'}
-            misses={misses}
-            onSubmit={submitGuess}
+        {mode === 'daily' ? (
+          <GameScreen
+            key={source.id}
+            source={source}
+            meta={`#${puzzleNumber} · ${date}`}
+            label="Today's article"
+            shareHeading={`Wiki Depth #${puzzleNumber}`}
           />
-        )}
-
-        {result && (
-          <>
-            <ResultView result={result} puzzleNumber={puzzleNumber} title={displayTitle} />
-            {state.status === 'ready' && <TopAnswers article={state.article} guess={result.guess} />}
-            {state.status === 'ready' && (
-              <ArticleReveal
-                article={state.article}
-                title={state.title}
-                revisionId={state.revisionId}
-                guess={result.guess}
-                firstIndex={result.index}
-              />
-            )}
-          </>
+        ) : (
+          <GameScreen
+            key={source.id}
+            source={source}
+            meta={`Endless · Round ${endlessRound}`}
+            label="Random vital article"
+            shareHeading="Wiki Depth Endless"
+            onNext={nextEndless}
+            onFinished={prefetchNextRandom}
+          />
         )}
       </main>
 

@@ -23,7 +23,10 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
           </li>
           <li>The first guess that <em>is</em> in the article is final — make it count!</li>
         </ul>
-        <p className="muted">A new article every day at midnight.</p>
+        <p className="muted">
+          <strong>Daily</strong>: a new article every day at midnight. <strong>Endless</strong>: random vital
+          articles, as many rounds as you like.
+        </p>
       </div>
     </Modal>
   );

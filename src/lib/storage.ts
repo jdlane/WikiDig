@@ -1,3 +1,4 @@
+import type { Puzzle } from '../data/puzzles';
 import type { GuessResult } from './scoring';
 import { toDateKey } from './daily';
 
@@ -90,6 +91,97 @@ export function getStats(todayKey: string): Stats {
     averageDepth: played ? results.reduce((sum, r) => sum + r.depth, 0) / played : 0,
     bestDepth: results.reduce((best, r) => Math.max(best, r.depth), 0),
     currentStreak: streak,
+  };
+}
+
+/** Where one game's progress is saved: a daily date, or the current endless round. */
+export interface GameStore {
+  getResult(): StoredResult | null;
+  saveResult(result: StoredResult): void;
+  getMisses(): string[];
+  saveMisses(misses: string[]): void;
+}
+
+export function dailyStore(dateKey: string): GameStore {
+  return {
+    getResult: () => getResult(dateKey),
+    saveResult: (r) => saveResult(dateKey, r),
+    getMisses: () => getMisses(dateKey),
+    saveMisses: (m) => saveMisses(dateKey, m),
+  };
+}
+
+// --- Endless mode ---------------------------------------------------------------------------
+
+const ENDLESS_KEY = 'wikidepth:endless';
+const ENDLESS_STATS_KEY = 'wikidepth:endlessStats';
+
+/** The endless round in progress. Saved so a refresh can't reroll the article. */
+export interface EndlessRound {
+  round: number;
+  puzzle: Puzzle | null;
+  misses: string[];
+  result: StoredResult | null;
+}
+
+function readJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function getEndlessRound(): EndlessRound {
+  return readJson<EndlessRound>(ENDLESS_KEY, { round: 1, puzzle: null, misses: [], result: null });
+}
+
+export function saveEndlessRound(round: EndlessRound): void {
+  writeJson(ENDLESS_KEY, round);
+}
+
+/** Start the next round (keeps the count going). */
+export function nextEndlessRound(): EndlessRound {
+  const next = { round: getEndlessRound().round + 1, puzzle: null, misses: [], result: null };
+  saveEndlessRound(next);
+  return next;
+}
+
+export interface EndlessStats {
+  played: number;
+  totalDepth: number;
+  bestDepth: number;
+}
+
+export function getEndlessStats(): EndlessStats {
+  return readJson<EndlessStats>(ENDLESS_STATS_KEY, { played: 0, totalDepth: 0, bestDepth: 0 });
+}
+
+export function endlessStore(): GameStore {
+  const update = (patch: Partial<EndlessRound>) => saveEndlessRound({ ...getEndlessRound(), ...patch });
+  return {
+    getResult: () => getEndlessRound().result,
+    saveResult: (result) => {
+      if (getEndlessRound().result) return; // count each round once
+      update({ result });
+      const s = getEndlessStats();
+      writeJson(ENDLESS_STATS_KEY, {
+        played: s.played + 1,
+        totalDepth: s.totalDepth + result.depth,
+        bestDepth: Math.max(s.bestDepth, result.depth),
+      });
+    },
+    getMisses: () => getEndlessRound().misses,
+    saveMisses: (misses) => update({ misses }),
   };
 }
 

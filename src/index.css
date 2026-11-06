@@ -140,6 +140,36 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* Mode tabs */
+.mode-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: -8px auto 16px;
+  padding: 3px;
+  width: fit-content;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.mode-tab {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 5px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mode-tab.active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 .puzzle-card {
   text-align: center;
 }
@@ -163,6 +193,10 @@ body {
   font-weight: 500;
   font-size: clamp(1.8rem, 6vw, 2.6rem);
   line-height: 1.2;
+}
+
+.puzzle-title.loading {
+  color: var(--muted);
 }
 
 /* Guess form */
@@ -534,9 +568,18 @@ mark.hit.first {
   margin-bottom: 6px;
 }
 
+.stats-heading {
+  margin: 12px 0 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
   gap: 8px;
   text-align: center;
   padding: 8px 0;

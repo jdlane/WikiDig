@@ -1,22 +1,18 @@
 interface Props {
-  puzzleNumber: number;
-  dateKey: string;
-  title: string;
+  /** Small line above, e.g. "#6 · Friday, November 6". */
+  meta: string;
+  /** e.g. "Today's article". */
+  label: string;
+  /** Null while the article is being chosen. */
+  title: string | null;
 }
 
-export function PuzzleCard({ puzzleNumber, dateKey, title }: Props) {
-  const date = new Date(`${dateKey}T00:00:00`).toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+export function PuzzleCard({ meta, label, title }: Props) {
   return (
     <section className="card puzzle-card">
-      <div className="puzzle-meta">
-        #{puzzleNumber} · {date}
-      </div>
-      <div className="puzzle-label">Today's article</div>
-      <h2 className="puzzle-title">{title}</h2>
+      <div className="puzzle-meta">{meta}</div>
+      <div className="puzzle-label">{label}</div>
+      <h2 className={title ? 'puzzle-title' : 'puzzle-title loading'}>{title ?? 'Loading…'}</h2>
     </section>
   );
 }
