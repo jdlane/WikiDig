@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countWords, extractArticle } from './extractText';
+import { countWords, extractArticle, firstSentenceOf } from './extractText';
 import { loadWordForms } from './wordForms';
 
 await loadWordForms();
@@ -74,5 +74,49 @@ describe('extractArticle', () => {
 
   it('labels block types', () => {
     expect(article.blocks.map((b) => b.type)).toEqual(['p', 'h2', 'p', 'li', 'li', 'li']);
+  });
+
+  it('exposes the lead paragraph\'s first sentence', () => {
+    expect(article.firstSentence).toBe('The octopus is a mollusc.');
+  });
+
+  it('has no first sentence without a paragraph', () => {
+    expect(extractArticle('<div class="mw-parser-output"><ul><li>Only a list</li></ul></div>').firstSentence).toBeNull();
+  });
+});
+
+describe('firstSentenceOf', () => {
+  it('stops at the first sentence end', () => {
+    expect(firstSentenceOf('Rome is a city. It is in Italy.')).toBe('Rome is a city.');
+    expect(firstSentenceOf('Is Rome a city? It is.')).toBe('Is Rome a city?');
+  });
+
+  it('returns a paragraph with no sentence end whole', () => {
+    expect(firstSentenceOf('Mercury may refer to:')).toBe('Mercury may refer to:');
+  });
+
+  it.each([
+    'St. Louis is an independent city in the U.S. state of Missouri.',
+    'Martin Luther King Jr. was an American activist.',
+    'Washington, D.C., is the capital of the United States.',
+    'J. R. R. Tolkien was an English writer.',
+    'Socrates (c. 470 – 399 BC. Athens) was a Greek philosopher.',
+    'Pi is approximately equal to 3.14159, a constant.',
+    'Yahoo! is an American web portal.',
+    '"Help!" is a song by the Beatles.',
+  ])('does not stop early in: %s', (sentence) => {
+    expect(firstSentenceOf(`${sentence} Another sentence follows.`)).toBe(sentence);
+  });
+
+  it('keeps a closing quote with its sentence', () => {
+    expect(firstSentenceOf('He called it "the end." Then he left.')).toBe('He called it "the end."');
+  });
+
+  it('tidies parentheses left by removed pronunciation guides', () => {
+    expect(firstSentenceOf('Yahoo () is a portal.')).toBe('Yahoo is a portal.');
+    expect(firstSentenceOf('An octopus is of the order Octopoda (, ).')).toBe('An octopus is of the order Octopoda.');
+    expect(firstSentenceOf('Socrates (; Ancient Greek: Σωκράτης) was a philosopher.')).toBe(
+      'Socrates (Ancient Greek: Σωκράτης) was a philosopher.',
+    );
   });
 });

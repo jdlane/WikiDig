@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { msUntilNextPuzzle } from '../lib/daily';
-import { depthPercent, depthScore } from '../lib/scoring';
+import { depthPercent, depthScore, materialFor } from '../lib/scoring';
 import { buildShareText } from '../lib/share';
 import type { StoredResult } from '../lib/storage';
-import { Lives } from './GuessForm';
+import { Pickaxes } from './GuessForm';
 
 interface Props {
   result: StoredResult;
-  /** First line of the share text, e.g. "Wiki Depth #6". */
+  /** First line of the share text, e.g. "WikiDig #6". */
   shareHeading: string;
   title: string;
   /** Endless mode: offer the next article instead of a countdown. */
@@ -36,6 +36,7 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
   const found = result.index >= 0;
   const misses = result.misses ?? [];
   const pct = depthPercent(result.depth);
+  const material = materialFor(result.depth);
 
   const share = async () => {
     const text = buildShareText(shareHeading, title, result);
@@ -57,7 +58,7 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
         </div>
         <div className="result-text">
           <div className="result-guess">
-            {found ? `“${result.guess}”` : 'Out of lives'} <Lives used={misses.length} />
+            {found ? `“${result.guess}”` : 'Out of pickaxes'} <Pickaxes used={misses.length} />
           </div>
           {misses.length > 0 && (
             <div className="muted missed-list">
@@ -72,6 +73,9 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
           )}
           {found ? (
             <>
+              <div className="result-material">
+                You struck {material.emoji} <strong>{material.name}</strong>
+              </div>
               <div className="result-score">{depthScore(result.depth).toLocaleString()}</div>
               <div className="muted">
                 points · {pct}% deep · word {(result.index + 1).toLocaleString()} of {result.total.toLocaleString()}

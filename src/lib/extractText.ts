@@ -19,6 +19,8 @@ export interface Article {
   keys: string[][];
   /** Words as written in the article, parallel to `keys`. */
   originals: string[];
+  /** Opening sentence of the lead, shown as a clue; null if the article has no paragraph. */
+  firstSentence: string | null;
 }
 
 /** Elements whose text never counts: citations, boxes, captions, tables, maths, etc. */
@@ -174,11 +176,54 @@ export function countWords(html: string): number {
   return count;
 }
 
+/** Words that end in a period without ending the sentence. */
+const ABBREVIATIONS = new Set([
+  'abbr', 'approx', 'b', 'c', 'ca', 'capt', 'cf', 'co', 'col', 'corp', 'd', 'dept', 'dr', 'est', 'fl', 'ft', 'gen',
+  'gov', 'inc', 'jr', 'lit', 'lt', 'ltd', 'mr', 'mrs', 'ms', 'mt', 'no', 'nos', 'pl', 'pres', 'prof', 'rep', 'rev',
+  'sen', 'sgt', 'sr', 'st', 'univ', 'vs',
+]);
+
+/** Whether the period right after `before` belongs to an abbreviation or initial (J. R. R., U.S., e.g.). */
+function endsWithAbbreviation(before: string): boolean {
+  const word = before.slice(before.search(/[^\s([{"'“‘]*$/));
+  return word.includes('.') || /^\p{Lu}$/u.test(word) || ABBREVIATIONS.has(word.toLowerCase());
+}
+
+/** Clear what removed pronunciation guides leave behind: "Yahoo () is", "Socrates (; Ancient Greek…". */
+function tidyParentheses(text: string): string {
+  return text.replace(/\s*\([\s;,]*\)/g, '').replace(/\(\s*[;,]\s*/g, '(');
+}
+
+/**
+ * The first sentence of a paragraph. When unsure it runs on rather than cutting short:
+ * a clue with an extra sentence is better than one that stops at "St.".
+ */
+export function firstSentenceOf(paragraph: string): string {
+  const text = tidyParentheses(paragraph);
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
+    if (depth > 0 || !'.!?'.includes(ch)) continue;
+
+    let end = i + 1;
+    while (end < text.length && `"'”’»`.includes(text[end])) end++;
+    if (end === text.length) return text;
+    if (!/\s/.test(text[end])) continue; // 3.14, Node.js
+    if (/^\s*\p{Ll}/u.test(text.slice(end))) continue; // continues in lowercase
+    if (ch === '.' && endsWithAbbreviation(text.slice(0, i))) continue;
+    return text.slice(0, end);
+  }
+  return text;
+}
+
 export function extractArticle(html: string): Article {
   const blocks: Block[] = [];
   const keys: string[][] = [];
   const originals: string[] = [];
-  for (const { type, text } of collectBlocks(html)) {
+  const raw = collectBlocks(html);
+  for (const { type, text } of raw) {
     const segments: Segment[] = [];
     let last = 0;
     for (const match of text.matchAll(TOKEN_RE)) {
@@ -193,5 +238,6 @@ export function extractArticle(html: string): Article {
     if (last < text.length) segments.push({ text: text.slice(last) });
     blocks.push({ type, segments });
   }
-  return { blocks, keys, originals };
+  const lead = raw.find((block) => block.type === 'p');
+  return { blocks, keys, originals, firstSentence: lead ? firstSentenceOf(lead.text) : null };
 }

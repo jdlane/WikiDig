@@ -74,7 +74,7 @@ export default function App() {
             source={source}
             meta={`#${puzzleNumber} · ${date}`}
             label="Today's article"
-            shareHeading={`Wiki Depth #${puzzleNumber}`}
+            shareHeading={`WikiDig #${puzzleNumber}`}
           />
         ) : (
           <GameScreen
@@ -82,7 +82,7 @@ export default function App() {
             source={source}
             meta={`Endless · Round ${endlessRound}`}
             label="Random vital article"
-            shareHeading="Wiki Depth Endless"
+            shareHeading="WikiDig Endless"
             onNext={nextEndless}
             onFinished={prefetchNextRandom}
           />

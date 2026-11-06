@@ -8,13 +8,13 @@ interface Props {
   onSubmit: (guess: string) => void;
 }
 
-export function Lives({ used }: { used: number }) {
+export function Pickaxes({ used }: { used: number }) {
   const left = MAX_LIVES - used;
   return (
-    <span className="lives" aria-label={`${left} of ${MAX_LIVES} lives left`}>
+    <span className="pickaxes" role="img" aria-label={`${left} of ${MAX_LIVES} pickaxes left`}>
       {Array.from({ length: MAX_LIVES }, (_, i) => (
-        <span key={i} className={i < left ? 'life' : 'life lost'}>
-          {i < left ? '♥' : '♡'}
+        <span key={i} className={i < left ? 'pickaxe' : 'pickaxe broken'}>
+          ⛏️
         </span>
       ))}
     </span>
@@ -63,11 +63,11 @@ export function GuessForm({ disabled, misses, onSubmit }: Props) {
         <label htmlFor="guess" className="guess-label">
           Which word first appears deepest in this article?
         </label>
-        <Lives used={misses.length} />
+        <Pickaxes used={misses.length} />
       </div>
       {lastMiss && (
         <p className="miss-text">
-          “{lastMiss}” isn't in the article — you lost a life. {MAX_LIVES - misses.length} left.
+          “{lastMiss}” isn't in the article — your pickaxe broke. {MAX_LIVES - misses.length} left.
         </p>
       )}
       <div className="guess-row">

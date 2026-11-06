@@ -30,7 +30,7 @@ globalThis.DOMParser = new JSDOM('').window.DOMParser;
 
 const API = 'https://en.wikipedia.org/w/api.php';
 const CONTACT = process.env.WIKI_CONTACT;
-const USER_AGENT = `WikiDepthPoolBuilder/0.1 (daily word game${CONTACT ? `; ${CONTACT}` : ''})`;
+const USER_AGENT = `WikiDigPoolBuilder/0.1 (daily word game${CONTACT ? `; ${CONTACT}` : ''})`;
 /** Article fetches in flight at once, and the minimum gap between any two requests. */
 const CONCURRENCY = 2;
 const MIN_INTERVAL_MS = 250;
@@ -112,6 +112,10 @@ async function gatherTitles(): Promise<Map<string, string>> {
   const topicOf = new Map<string, string>();
   for (const category of topics) {
     const topic = category.replace(/^.* vital articles in /, '');
+    if (config.EXCLUDED_TOPICS.has(topic)) {
+      console.log(`  ${topic}: skipped (excluded topic)`);
+      continue;
+    }
     const talkPages = await categoryMembers(category, { cmnamespace: '1', cmtype: 'page' });
     for (const talk of talkPages) {
       const title = talk.replace(/^Talk:/, '');

@@ -4,6 +4,7 @@ import {
   applyGuess,
   computeScore,
   depthScore,
+  materialFor,
   normalizeWord,
   sameWord,
   topAnswers,
@@ -105,6 +106,23 @@ describe('depthScore', () => {
     expect(depthScore(0.8734)).toBe(8734);
     expect(depthScore(0)).toBe(0);
     expect(depthScore(6 / 7)).toBe(8571);
+  });
+});
+
+describe('materialFor', () => {
+  it.each([
+    [0, 'Dirt'],
+    [0.2499, 'Dirt'],
+    [0.25, 'Coal'],
+    [0.4999, 'Coal'],
+    [0.5, 'Iron'],
+    [0.7499, 'Iron'],
+    [0.75, 'Gold'],
+    [0.8999, 'Gold'],
+    [0.9, 'Diamond'],
+    [0.9999, 'Diamond'],
+  ])('at depth %d is %s', (depth, name) => {
+    expect(materialFor(depth).name).toBe(name);
   });
 });
 

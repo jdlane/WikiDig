@@ -29,7 +29,12 @@ export function GameScreen({ source, meta, label, shareHeading, onNext, onFinish
 
   return (
     <>
-      <PuzzleCard meta={meta} label={label} title={title} />
+      <PuzzleCard
+        meta={meta}
+        label={label}
+        title={title}
+        firstSentence={state.status === 'ready' ? state.article.firstSentence : null}
+      />
 
       {state.status === 'error' && (
         <section className="card error-card">

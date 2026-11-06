@@ -20,7 +20,7 @@ export function Header({ mode, onMode, onHelp, onStats }: Props) {
           ?
         </button>
         <h1>
-          Wiki <span className="accent">Depth</span>
+          Wiki<span className="accent">Dig</span>
         </h1>
         <button className="icon-button" onClick={onStats} aria-label="Statistics">
           ▥

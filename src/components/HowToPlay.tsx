@@ -1,4 +1,4 @@
-import { MAX_LIVES } from '../lib/scoring';
+import { MATERIALS, MAX_LIVES } from '../lib/scoring';
 import { Modal } from './Modal';
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
@@ -6,16 +6,27 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
     <Modal title="How to play" onClose={onClose}>
       <div className="rules">
         <p>
-          Each day you get the title of one Wikipedia article. Guess a <strong>single word</strong> that you think
-          first appears <strong>as far down the article as possible</strong>.
+          Each day you get the title and opening sentence of one Wikipedia article. Guess a{' '}
+          <strong>single word</strong> that you think first appears <strong>as far down the article as possible</strong>.
         </p>
         <ul>
           <li>Only the word's <em>first</em> appearance counts.</li>
           <li>
-            You have <strong>{MAX_LIVES} lives</strong>. Guessing a word that isn't in the article costs a life and you
-            guess again. Lose them all and you score 0.
+            You have <strong>{MAX_LIVES} pickaxes</strong>. Guessing a word that isn't in the article breaks one and you
+            guess again. Break them all and you score 0.
           </li>
           <li>Your score is your word's depth: 87.34% of the way down = 8,734 points.</li>
+          <li>
+            The deeper you dig, the better your find:{' '}
+            {MATERIALS.map((m, i) => (
+              <span key={m.name} className="material-rule">
+                {m.emoji} {m.name}
+                {m.minDepth > 0 && ` (${m.minDepth * 100}%+)`}
+                {i < MATERIALS.length - 1 && ', '}
+              </span>
+            ))}
+            .
+          </li>
           <li>Citations, reference lists, tables, captions, infoboxes, and end sections (See also, References, External links…) don't count.</li>
           <li>
             Every form of a word counts as the same word: <em>beehive</em> = <em>Beehives</em>,{' '}

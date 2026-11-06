@@ -30,7 +30,7 @@ export function sameWord(a: string, b: string): boolean {
   return sharesKey(wordKeys(a), wordKeys(b));
 }
 
-/** Guesses not found in the article cost a life; running out scores 0. */
+/** Guesses not found in the article cost a life (shown to players as a pickaxe); running out scores 0. */
 export const MAX_LIVES = 3;
 
 /** Returns an error message, or null if the guess is acceptable. */
@@ -90,6 +90,27 @@ export function depthPercent(depth: number): number {
 /** Points: percent depth × 100, so 0–10,000 (87.34% deep → 8,734). */
 export function depthScore(depth: number): number {
   return Math.floor(depth * 10_000);
+}
+
+export interface Material {
+  name: string;
+  emoji: string;
+  /** The shallowest depth (0–1) that earns this material. */
+  minDepth: number;
+}
+
+/** What a dig turns up, shallowest first. */
+export const MATERIALS: readonly Material[] = [
+  { name: 'Dirt', emoji: '🟫', minDepth: 0 },
+  { name: 'Coal', emoji: '⚫', minDepth: 0.25 },
+  { name: 'Iron', emoji: '🔩', minDepth: 0.5 },
+  { name: 'Gold', emoji: '🪙', minDepth: 0.75 },
+  { name: 'Diamond', emoji: '💎', minDepth: 0.9 },
+];
+
+/** The deepest material reached at `depth`. */
+export function materialFor(depth: number): Material {
+  return MATERIALS.reduce((best, m) => (depth >= m.minDepth ? m : best));
 }
 
 export interface TopAnswer {

@@ -199,6 +199,14 @@ body {
   color: var(--muted);
 }
 
+.puzzle-sentence {
+  margin: 10px 0 0;
+  font-family: var(--serif);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 /* Guess form */
 .guess-header {
   display: flex;
@@ -213,23 +221,19 @@ body {
   font-weight: 500;
 }
 
-.lives {
+.pickaxes {
   white-space: nowrap;
   font-size: 1.2rem;
   line-height: 1;
   letter-spacing: 2px;
 }
 
-.life {
-  color: var(--miss);
+.pickaxe.broken {
+  filter: grayscale(1);
+  opacity: 0.3;
 }
 
-.life.lost {
-  color: var(--muted);
-  opacity: 0.6;
-}
-
-.result-guess .lives {
+.result-guess .pickaxes {
   font-size: 1rem;
   margin-left: 6px;
   vertical-align: middle;
@@ -369,6 +373,14 @@ body {
 .result-guess {
   font-family: var(--serif);
   font-size: 1.3rem;
+}
+
+.result-material {
+  margin-top: 4px;
+}
+
+.material-rule {
+  white-space: nowrap;
 }
 
 .result-score {

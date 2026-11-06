@@ -2,6 +2,7 @@ import type { Puzzle } from '../data/puzzles';
 import type { GuessResult } from './scoring';
 import { toDateKey } from './daily';
 
+// Keys keep the game's original name: changing them would orphan players' saved results.
 const RESULTS_KEY = 'wikidepth:results';
 const MISSES_KEY = 'wikidepth:misses';
 const SEEN_RULES_KEY = 'wikidepth:seenRules';

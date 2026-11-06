@@ -9,6 +9,9 @@ export const SOURCE_CATEGORY = 'Category:Wikipedia level-4 vital articles by top
 /** Cheap prefilter on page size in bytes of wikitext, before fetching anything. */
 export const MIN_BYTES = 20_000;
 
+/** Vital-article topics to leave out entirely. "People" is the biographies. */
+export const EXCLUDED_TOPICS = new Set<string>(['People']);
+
 /** Seed for shuffling newly added articles into the schedule. */
 export const SEED = 20261101;
 
