@@ -381,6 +381,99 @@ body {
   font-size: 1.3rem;
 }
 
+/* Pinned score bar (shown while the result card is scrolled away) */
+.score-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: env(safe-area-inset-top) 16px 0;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateY(-110%);
+  transition:
+    transform 0.2s ease-out,
+    visibility 0.2s;
+}
+
+.score-bar.visible {
+  visibility: visible;
+  transform: none;
+}
+
+.score-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 648px; /* .app's 680px minus its side padding */
+  margin: 0 auto;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  box-shadow: var(--shadow), 0 2px 8px rgb(0 0 0 / 0.08);
+  pointer-events: auto;
+}
+
+.score-bar-summary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.score-bar-summary:hover {
+  background: var(--bg);
+}
+
+.score-bar-guess {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+}
+
+.score-bar-score {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.score-bar-score.miss {
+  color: var(--miss);
+}
+
+.score-bar-summary .muted {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+
+.button.small {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-bar {
+    transition: none;
+  }
+}
+
 .result-material {
   margin-top: 4px;
 }

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { msUntilNextPuzzle } from '../lib/daily';
 import { depthPercent, depthScore, materialFor } from '../lib/scoring';
 import { buildShareText } from '../lib/share';
 import type { StoredResult } from '../lib/storage';
 import { Pickaxes } from './GuessForm';
+import { ScoreBar, isScrolledPast } from './ScoreBar';
 
 interface Props {
   result: StoredResult;
@@ -33,10 +34,23 @@ function Countdown() {
 
 export function ResultView({ result, shareHeading, title, onNext }: Props) {
   const [copied, setCopied] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
   const found = result.index >= 0;
   const misses = result.misses ?? [];
   const pct = depthPercent(result.depth);
   const material = materialFor(result.depth);
+
+  // Pin a compact copy of the result while this card is scrolled off the top (e.g. after the jump to the word).
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setPinned(isScrolledPast(entry)));
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
+
+  const jumpToResult = () => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const share = async () => {
     const text = buildShareText(shareHeading, title, result);
@@ -50,7 +64,15 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
   };
 
   return (
-    <section className="card result-card">
+    <section className="card result-card" ref={cardRef}>
+      <ScoreBar
+        result={result}
+        visible={pinned}
+        copied={copied}
+        onShare={share}
+        onNext={onNext}
+        onJumpToResult={jumpToResult}
+      />
       <div className="result-body">
         <div className="depth-meter" aria-hidden="true">
           <div className="depth-fill" style={{ height: `${found ? Math.max(pct, 2) : 0}%` }} />

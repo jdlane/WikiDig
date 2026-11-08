@@ -57,6 +57,8 @@ export async function fetchArticleHtml(title: string, revisionId?: number): Prom
   else params.page = title;
 
   const data = await wikiApi<ParseResponse>(params);
+  // A pinned revision can be hidden or deleted years later; play the current version instead.
+  if (!data.parse && revisionId) return fetchArticleHtml(title);
   if (!data.parse) throw new Error(data.error?.info ?? 'Article not found');
 
   const article: ArticleHtml = {

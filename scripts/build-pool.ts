@@ -17,11 +17,11 @@ import { countWords } from '../src/lib/extractText';
 import type { PoolEntry, PoolFile } from '../src/lib/pool';
 import * as config from './pool-config';
 import {
+  chooseSample,
   filterReason,
   isBlockedByCategory,
   mapLimit,
   mergePool,
-  seededShuffle,
   type Candidate,
   type FilterReason,
 } from './poolLib';
@@ -33,7 +33,9 @@ const CONTACT = process.env.WIKI_CONTACT;
 const USER_AGENT = `WikiDigPoolBuilder/0.1 (daily word game${CONTACT ? `; ${CONTACT}` : ''})`;
 /** Article fetches in flight at once, and the minimum gap between any two requests. */
 const CONCURRENCY = 2;
-const MIN_INTERVAL_MS = 250;
+// Identified clients (User-Agent with contact info) get 200 requests/min; stay under it.
+// Without WIKI_CONTACT the limit is 10/min and the script spends most of its time waiting.
+const MIN_INTERVAL_MS = 350;
 const CACHE_DIR = path.resolve('scripts/.cache/articles');
 
 const args = process.argv.slice(2);
@@ -218,9 +220,8 @@ async function main() {
 
   const topicOf = await gatherTitles();
   console.log(`${topicOf.size} vital articles.`);
-  const sample = Number.isFinite(LIMIT)
-    ? new Map(seededShuffle([...topicOf], config.SEED).slice(0, LIMIT))
-    : topicOf;
+  const existing = await readExisting();
+  const sample = chooseSample(topicOf, existing, LIMIT, config.SEED);
   console.log(`Fetching metadata for ${sample.size}…`);
   const candidates = await gatherMetadata(sample);
 
@@ -261,7 +262,6 @@ async function main() {
   }
   fresh.sort((a, b) => a.title.localeCompare(b.title)); // stable input → reproducible shuffle
 
-  const existing = await readExisting();
   const lastPlayedIndex = getPuzzleNumber(toDateKey(new Date())) - 1;
   const entries = mergePool(existing, fresh, lastPlayedIndex, config.SEED);
 

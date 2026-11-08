@@ -78,6 +78,27 @@ export function mergePool(
   return [...past, ...future, ...seededShuffle(added, seed + existing.length)];
 }
 
+/**
+ * Which titles to process (title → topic). Already-scheduled articles always come first
+ * (with their stored topic), so a sampled run never drops them. The rest is a seeded random
+ * sample up to `limit`. Titles are sorted before shuffling, so the order the API lists them
+ * in doesn't matter.
+ */
+export function chooseSample(
+  all: Map<string, string>,
+  existing: PoolEntry[],
+  limit: number,
+  seed: number,
+): Map<string, string> {
+  const sample = new Map(existing.map((e) => [e.title, all.get(e.title) ?? e.topic]));
+  const others = [...all].filter(([title]) => !sample.has(title)).sort(([a], [b]) => a.localeCompare(b));
+  for (const [title, topic] of seededShuffle(others, seed)) {
+    if (sample.size >= limit) break;
+    sample.set(title, topic);
+  }
+  return sample;
+}
+
 /** Run `fn` over `items` with at most `limit` in flight. Results keep input order. */
 export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, i: number) => Promise<R>): Promise<R[]> {
   const results = new Array<R>(items.length);

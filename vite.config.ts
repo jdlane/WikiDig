@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // Relative asset paths so the site works under any GitHub Pages subpath (/<repo>/).
+  base: './',
   build: {
     // The WordNet chunk (~1.7 MB, ~590 KB gzipped) is expected; it loads alongside the article.
     chunkSizeWarningLimit: 2000,
