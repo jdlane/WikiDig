@@ -51,6 +51,7 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
   }, []);
 
   const jumpToResult = () => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const share = async () => {
     const text = buildShareText(shareHeading, title, result);
@@ -83,6 +84,15 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
         onNext={onNext}
         onJumpToResult={jumpToResult}
       />
+      <button
+        className={pinned ? 'scroll-top visible' : 'scroll-top'}
+        onClick={scrollToTop}
+        aria-label="Scroll to top"
+        title="Scroll to top"
+        tabIndex={pinned ? 0 : -1}
+      >
+        ↑
+      </button>
       <div className="result-body">
         <div className="depth-meter" aria-hidden="true">
           <div className="depth-fill" style={{ height: `${found ? Math.max(pct, 2) : 0}%` }} />
