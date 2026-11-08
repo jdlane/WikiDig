@@ -3,8 +3,6 @@ import type { StoredResult } from './storage';
 
 const SQUARES = 10;
 
-export const GAME_URL = 'https://jdlane.github.io/Wikidig/';
-
 export function buildShareText(heading: string, title: string, result: StoredResult): string {
   const found = result.index >= 0;
   const filled = found ? Math.max(1, Math.round(result.depth * SQUARES)) : 1;
@@ -15,5 +13,5 @@ export function buildShareText(heading: string, title: string, result: StoredRes
   const line = found
     ? `${depthScore(result.depth).toLocaleString()} points (${depthPercent(result.depth)}% deep) · ${material.emoji} ${material.name}`
     : '0 points — out of pickaxes!';
-  return `${heading} — ${title}\n${line}\n${bar} ${pickaxes}\n${GAME_URL}`;
+  return `${heading} — ${title}\n${line}\n${bar} ${pickaxes}`;
 }

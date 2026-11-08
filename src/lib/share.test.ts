@@ -18,9 +18,9 @@ describe('buildShareText', () => {
     expect(text).not.toContain('Dirt');
   });
 
-  it('links to the game on GitHub Pages', () => {
+  it('contains no link', () => {
     const text = buildShareText('WikiDig #6', 'Bee', { ...base, index: 10, depth: 0.1 });
-    expect(text.endsWith('https://jdlane.github.io/Wikidig/')).toBe(true);
+    expect(text).not.toContain('http');
   });
 
   it('treats results saved before lives existed as having lost none', () => {
