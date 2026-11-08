@@ -1,4 +1,4 @@
-import { MATERIALS, MAX_LIVES } from '../lib/scoring';
+import { MAX_LIVES } from '../lib/scoring';
 import { Modal } from './Modal';
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
