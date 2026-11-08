@@ -1,17 +1,30 @@
+/*
+ * "Strata": the page is a soil cross-section. The background runs topsoil → clay → stone →
+ * bedrock → magma over the whole document, so scrolling down an article digs deeper.
+ */
 :root {
-  --bg: #f6f6f3;
-  --surface: #ffffff;
-  --text: #202122;
-  --muted: #6b6f75;
-  --border: #dcdcd6;
-  --accent: #2f6fde;
+  /* Page layers, top to bottom */
+  --soil-1: #e9dcc3;
+  --soil-2: #d9b98c;
+  --soil-3: #9b9186;
+  --soil-4: #4a4540;
+  --magma: #d4541c;
+
+  --bg: #efe5d3; /* recessed surfaces: inputs, alternating rows, chips */
+  --surface: #fbf7ef;
+  --text: #2b2420;
+  --muted: #6e6257;
+  --border: #ddd0bb;
+  --slab-edge: #c9b79b; /* the thick bottom edge of a stone slab */
+  --accent: #a3561a; /* copper */
+  --accent-edge: #7a3e10;
   --accent-text: #ffffff;
-  --hit: #ffe58a;
-  --hit-first: #ffb300;
-  --miss: #c0392b;
-  --depth-top: #9ec5ff;
-  --depth-bottom: #10306b;
-  --shadow: 0 1px 3px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.04);
+  --hit: #f3d27a;
+  --hit-first: #e0a526;
+  --miss: #b23a26;
+  --grit: rgb(60 35 10 / 0.07);
+  --shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 6px 18px rgb(70 40 10 / 0.12);
+  --display: 'Zilla Slab', 'Rockwell', 'Georgia', serif;
   --serif: 'Linux Libertine', 'Georgia', 'Times New Roman', serif;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
@@ -19,18 +32,26 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121315;
-    --surface: #1c1d20;
-    --text: #e8e8e6;
-    --muted: #9a9ea5;
-    --border: #33353a;
-    --accent: #5b8ff0;
-    --hit: #5a4a10;
-    --hit-first: #c98a00;
-    --miss: #e5675a;
-    --depth-top: #3a5d99;
-    --depth-bottom: #9ec5ff;
-    --shadow: none;
+    --soil-1: #2a2219;
+    --soil-2: #3a2a1c;
+    --soil-3: #2b2b2e;
+    --soil-4: #18171a;
+    --magma: #ff7a3d;
+
+    --bg: #171411;
+    --surface: #221d18;
+    --text: #efe6d8;
+    --muted: #ab9d8c;
+    --border: #3a3129;
+    --slab-edge: #120f0c;
+    --accent: #e39a52;
+    --accent-edge: #a8642a;
+    --accent-text: #1b130c;
+    --hit: #6b5418;
+    --hit-first: #d9a032;
+    --miss: #ef7a62;
+    --grit: rgb(255 230 200 / 0.035);
+    --shadow: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 8px 22px rgb(0 0 0 / 0.45);
     color-scheme: dark;
   }
 }
@@ -39,9 +60,25 @@
   box-sizing: border-box;
 }
 
+/* Sized to the whole document (not the viewport), so the layers sit at fixed depths in the page. */
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(var(--grit) 1px, transparent 1.6px) 0 0 / 7px 7px,
+    radial-gradient(var(--grit) 1px, transparent 1.6px) 3px 4px / 13px 13px,
+    linear-gradient(
+      to bottom,
+      var(--soil-1) 0,
+      var(--soil-1) 220px,
+      var(--soil-2) 40%,
+      var(--soil-3) 75%,
+      var(--soil-4) 96%,
+      color-mix(in srgb, var(--magma) 45%, var(--soil-4)) 100%
+    );
+}
+
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   line-height: 1.5;
@@ -93,17 +130,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 0 12px;
+  border-bottom: 3px double color-mix(in srgb, var(--soil-2) 70%, var(--text));
   margin-bottom: 20px;
 }
 
 .header h1 {
   margin: 0;
-  font-family: var(--serif);
-  font-size: 1.75rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  font-family: var(--display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .accent {
@@ -113,12 +151,19 @@ body {
 .icon-button {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 6px;
   border: 1px solid var(--border);
+  border-bottom: 3px solid var(--slab-edge);
   background: var(--surface);
   color: var(--text);
-  font-size: 1rem;
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 700;
   cursor: pointer;
+}
+
+.icon-button:active {
+  transform: translateY(1px);
 }
 
 .icon-button:hover {
@@ -132,34 +177,40 @@ body {
   gap: 16px;
 }
 
+/* Cards are stone slabs: square-ish corners, a thick lower edge and a chiselled top highlight. */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-bottom: 4px solid var(--slab-edge);
+  border-radius: 6px;
   padding: 20px;
   box-shadow: var(--shadow);
 }
 
-/* Mode tabs */
+/* Mode tabs: a recessed tunnel with the active tab raised in copper */
 .mode-tabs {
   display: flex;
   justify-content: center;
   gap: 4px;
   margin: -8px auto 16px;
-  padding: 3px;
+  padding: 4px;
   width: fit-content;
   border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.12);
 }
 
 .mode-tab {
   font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 5px 16px;
+  font-family: var(--display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 16px;
   border: none;
-  border-radius: 999px;
+  border-radius: 5px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -168,6 +219,7 @@ body {
 .mode-tab.active {
   background: var(--accent);
   color: var(--accent-text);
+  box-shadow: 0 2px 0 var(--accent-edge);
 }
 
 .puzzle-card {
@@ -182,17 +234,18 @@ body {
 .puzzle-label {
   margin-top: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   font-size: 0.75rem;
-  color: var(--muted);
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .puzzle-title {
   margin: 4px 0 0;
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(1.8rem, 6vw, 2.6rem);
-  line-height: 1.2;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.9rem, 6.5vw, 2.8rem);
+  line-height: 1.15;
 }
 
 .puzzle-title.loading {
@@ -267,10 +320,11 @@ body {
   min-width: 0;
   font-size: 1.1rem;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.08);
 }
 
 .guess-input:focus {
@@ -296,13 +350,19 @@ body {
   justify-content: center;
 }
 
+/* Buttons sit on a ledge and press down into it. */
 .button {
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   padding: 10px 18px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid transparent;
   cursor: pointer;
+  transition: transform 0.05s;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(2px);
 }
 
 .button:disabled {
@@ -313,12 +373,22 @@ body {
 .button.primary {
   background: var(--accent);
   color: var(--accent-text);
+  box-shadow: 0 3px 0 var(--accent-edge);
+}
+
+.button.primary:active:not(:disabled) {
+  box-shadow: 0 1px 0 var(--accent-edge);
 }
 
 .button.secondary {
-  background: transparent;
+  background: var(--surface);
   border-color: var(--border);
   color: var(--text);
+  box-shadow: 0 3px 0 var(--slab-edge);
+}
+
+.button.secondary:active:not(:disabled) {
+  box-shadow: 0 1px 0 var(--slab-edge);
 }
 
 .error-text {
@@ -343,21 +413,36 @@ body {
   margin-bottom: 16px;
 }
 
+/*
+ * A core sample: every material layer is painted on the meter, at the depths in MATERIALS
+ * (src/lib/scoring.ts). The fill is a clear window over the layers you dug through; its huge
+ * spread shadow veils everything below it, so the reveal animates with the fill's height.
+ */
 .depth-meter {
   position: relative;
-  width: 18px;
-  min-height: 120px;
-  border-radius: 9px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  width: 22px;
+  min-height: 140px;
+  border-radius: 4px;
+  border: 2px solid var(--slab-edge);
   overflow: hidden;
   flex-shrink: 0;
+  background: linear-gradient(
+    to bottom,
+    #7a5230 0 15%,
+    #2e2e2e 15% 30%,
+    #c46a2b 30% 45%,
+    #8a8f96 45% 60%,
+    #c9ccd1 60% 75%,
+    #e0a526 75% 90%,
+    #5fd3e6 90% 99%,
+    #e2501c 99% 100%
+  );
 }
 
 .depth-fill {
   position: absolute;
   inset: 0 0 auto 0;
-  background: linear-gradient(var(--depth-top), var(--depth-bottom));
+  box-shadow: 0 0 0 100vh color-mix(in srgb, var(--surface) 80%, transparent);
   transition: height 0.8s ease-out;
 }
 
@@ -366,7 +451,8 @@ body {
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--hit-first);
+  background: var(--text);
+  box-shadow: 0 0 0 1px var(--surface);
   transform: translateY(-50%);
 }
 
@@ -409,10 +495,12 @@ body {
   max-width: 648px; /* .app's 680px minus its side padding */
   margin: 0 auto;
   padding: 8px 10px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   border-top: none;
-  border-radius: 0 0 12px 12px;
+  border-bottom: 3px solid var(--slab-edge);
+  border-radius: 0 0 6px 6px;
   box-shadow: var(--shadow), 0 2px 8px rgb(0 0 0 / 0.08);
   pointer-events: auto;
 }
@@ -479,7 +567,8 @@ body {
   display: grid;
   place-items: center;
   border: 1px solid var(--border);
-  border-radius: 50%;
+  border-bottom: 3px solid var(--slab-edge);
+  border-radius: 6px;
   background: var(--surface);
   color: var(--text);
   font-size: 1.25rem;
@@ -527,10 +616,12 @@ body {
 }
 
 .result-score {
-  font-size: 3rem;
+  font-family: var(--display);
+  font-size: 3.4rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
   color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 
 .result-score.miss {
@@ -547,9 +638,9 @@ body {
 /* Top answers */
 .top-heading {
   margin: 0 0 10px;
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: 1.2rem;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.3rem;
 }
 
 .top-list {
@@ -564,7 +655,7 @@ body {
   gap: 10px;
   align-items: baseline;
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: 3px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -622,8 +713,8 @@ body {
 
 .article-header h2 {
   margin: 0 0 6px;
-  font-family: var(--serif);
-  font-weight: 500;
+  font-family: var(--display);
+  font-weight: 600;
 }
 
 .article-header a {
@@ -684,7 +775,7 @@ mark.hit.first {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 0.45);
+  background: rgb(30 18 8 / 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -694,7 +785,10 @@ mark.hit.first {
 
 .modal {
   background: var(--surface);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-bottom: 4px solid var(--slab-edge);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
   padding: 20px;
   width: 100%;
   max-width: 460px;
@@ -711,8 +805,8 @@ mark.hit.first {
 
 .modal-header h2 {
   margin: 0;
-  font-family: var(--serif);
-  font-weight: 500;
+  font-family: var(--display);
+  font-weight: 700;
 }
 
 .rules ul {
@@ -741,8 +835,10 @@ mark.hit.first {
 }
 
 .stat-value {
-  font-size: 1.8rem;
+  font-family: var(--display);
+  font-size: 2rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-label {
@@ -757,11 +853,13 @@ mark.hit.first {
   margin: 6px 0 4px;
 }
 
+/* Badges are small engraved stone chips. */
 .badge {
   padding: 2px 10px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 4px;
   background: var(--bg);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.12);
   font-family: var(--sans);
   font-size: 0.8rem;
   font-weight: 600;
