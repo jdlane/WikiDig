@@ -9,7 +9,7 @@ export function buildShareText(heading: string, title: string, result: StoredRes
   const bar = (found ? '🟩' : '🟥').repeat(filled) + '⬜'.repeat(SQUARES - filled);
   const used = result.misses?.length ?? 0;
   const pickaxes = '⛏️'.repeat(MAX_LIVES - used) + '💥'.repeat(used);
-  const material = materialFor(result.depth);
+  const material = materialFor(result);
   const line = found
     ? `${depthScore(result.depth).toLocaleString()} points (${depthPercent(result.depth)}% deep) · ${material.emoji} ${material.name}`
     : '0 points — out of pickaxes!';

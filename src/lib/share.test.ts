@@ -11,6 +11,11 @@ describe('buildShareText', () => {
     expect(text).toContain('⛏️⛏️💥');
   });
 
+  it("shows Earth's Core for the last word", () => {
+    const text = buildShareText('WikiDig #6', 'Bee', { ...base, index: 99, depth: 0.99 });
+    expect(text).toContain("🔥 Earth's Core");
+  });
+
   it('shows no material when every pickaxe broke', () => {
     const text = buildShareText('WikiDig #6', 'Bee', { ...base, index: -1, depth: 0, misses: ['a', 'b', 'c'] });
     expect(text).toContain('out of pickaxes');

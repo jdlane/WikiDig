@@ -16,17 +16,6 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
             guess again. Break them all and you score 0.
           </li>
           <li>Your score is your word's depth: 87.34% of the way down = 8,734 points.</li>
-          <li>
-            The deeper you dig, the better your find:{' '}
-            {MATERIALS.map((m, i) => (
-              <span key={m.name} className="material-rule">
-                {m.emoji} {m.name}
-                {m.minDepth > 0 && ` (${m.minDepth * 100}%+)`}
-                {i < MATERIALS.length - 1 && ', '}
-              </span>
-            ))}
-            .
-          </li>
           <li>Citations, reference lists, tables, captions, infoboxes, and end sections (See also, References, External links…) don't count.</li>
           <li>
             Every form of a word counts as the same word: <em>beehive</em> = <em>Beehives</em>,{' '}

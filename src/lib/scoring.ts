@@ -102,14 +102,25 @@ export interface Material {
 /** What a dig turns up, shallowest first. */
 export const MATERIALS: readonly Material[] = [
   { name: 'Dirt', emoji: '🟫', minDepth: 0 },
-  { name: 'Coal', emoji: '⚫', minDepth: 0.25 },
-  { name: 'Iron', emoji: '🔩', minDepth: 0.5 },
-  { name: 'Gold', emoji: '🪙', minDepth: 0.75 },
+  { name: 'Coal', emoji: '⚫', minDepth: 0.15 },
+  { name: 'Copper', emoji: '🟠', minDepth: 0.3 },
+  { name: 'Iron', emoji: '🔩', minDepth: 0.45 },
+  { name: 'Silver', emoji: '⚪', minDepth: 0.6 },
+  { name: 'Gold', emoji: '💰', minDepth: 0.75 },
   { name: 'Diamond', emoji: '💎', minDepth: 0.9 },
+  { name: 'Magma', emoji: '🌋', minDepth: 0.99 },
 ];
 
-/** The deepest material reached at `depth`. */
-export function materialFor(depth: number): Material {
+/**
+ * A secret tier for guessing the article's very last word. Kept out of MATERIALS so the
+ * rules never list it. Checked by position: the last word's depth is (total-1)/total, which
+ * in a short article can fall below Magma.
+ */
+export const EARTHS_CORE: Material = { name: "Earth's Core", emoji: '🔥', minDepth: 1 };
+
+/** The deepest material a guess reached. */
+export function materialFor({ index, total, depth }: Pick<GuessResult, 'index' | 'total' | 'depth'>): Material {
+  if (index >= 0 && total > 0 && index === total - 1) return EARTHS_CORE;
   return MATERIALS.reduce((best, m) => (depth >= m.minDepth ? m : best));
 }
 

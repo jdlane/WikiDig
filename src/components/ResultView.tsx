@@ -39,7 +39,7 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
   const found = result.index >= 0;
   const misses = result.misses ?? [];
   const pct = depthPercent(result.depth);
-  const material = materialFor(result.depth);
+  const material = materialFor(result);
 
   // Pin a compact copy of the result while this card is scrolled off the top (e.g. after the jump to the word).
   useEffect(() => {

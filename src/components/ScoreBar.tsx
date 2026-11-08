@@ -21,7 +21,7 @@ interface Props {
 /** A compact copy of the result, pinned to the top while the player reads the article. */
 export function ScoreBar({ result, visible, copied, onShare, onNext, onJumpToResult }: Props) {
   const found = result.index >= 0;
-  const material = materialFor(result.depth);
+  const material = materialFor(result);
   return (
     <div className={visible ? 'score-bar visible' : 'score-bar'}>
       <div className="score-bar-inner">

@@ -112,17 +112,39 @@ describe('depthScore', () => {
 describe('materialFor', () => {
   it.each([
     [0, 'Dirt'],
-    [0.2499, 'Dirt'],
-    [0.25, 'Coal'],
-    [0.4999, 'Coal'],
-    [0.5, 'Iron'],
-    [0.7499, 'Iron'],
+    [0.1499, 'Dirt'],
+    [0.15, 'Coal'],
+    [0.2999, 'Coal'],
+    [0.3, 'Copper'],
+    [0.4499, 'Copper'],
+    [0.45, 'Iron'],
+    [0.5999, 'Iron'],
+    [0.6, 'Silver'],
+    [0.7499, 'Silver'],
     [0.75, 'Gold'],
     [0.8999, 'Gold'],
     [0.9, 'Diamond'],
-    [0.9999, 'Diamond'],
+    [0.9899, 'Diamond'],
+    [0.99, 'Magma'],
+    [0.9999, 'Magma'],
   ])('at depth %d is %s', (depth, name) => {
-    expect(materialFor(depth).name).toBe(name);
+    expect(materialFor({ index: 0, total: 100_000, depth }).name).toBe(name);
+  });
+
+  it("awards Earth's Core for the very last word", () => {
+    expect(materialFor({ index: 99, total: 100, depth: 0.99 }).name).toBe("Earth's Core");
+  });
+
+  it("awards Earth's Core for the last word of a short article, even below 99%", () => {
+    expect(materialFor({ index: 59, total: 60, depth: 59 / 60 }).name).toBe("Earth's Core");
+  });
+
+  it("does not award Earth's Core for the second-to-last word", () => {
+    expect(materialFor({ index: 98, total: 100, depth: 0.98 }).name).toBe('Diamond');
+  });
+
+  it("does not award Earth's Core for a miss", () => {
+    expect(materialFor({ index: -1, total: 0, depth: 0 }).name).toBe('Dirt');
   });
 });
 

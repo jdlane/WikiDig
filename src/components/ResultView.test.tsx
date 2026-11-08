@@ -32,7 +32,7 @@ describe('ResultView score bar', () => {
     expect(markup).toContain('<div class="score-bar">');
     const b = bar(markup);
     expect(b).toContain('hive');
-    expect(b).toContain('🪙');
+    expect(b).toContain('💰');
     expect(b).toContain('87%');
     expect(b).not.toContain('Next');
   });
