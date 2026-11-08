@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { badgesFor } from '../lib/badges';
 import { msUntilNextPuzzle } from '../lib/daily';
 import { depthPercent, depthScore, materialFor } from '../lib/scoring';
 import { buildShareText } from '../lib/share';
@@ -40,6 +41,7 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
   const misses = result.misses ?? [];
   const pct = depthPercent(result.depth);
   const material = materialFor(result);
+  const badges = badgesFor(result);
 
   // Pin a compact copy of the result while this card is scrolled off the top (e.g. after the jump to the word).
   useEffect(() => {
@@ -118,6 +120,15 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
               <div className="result-material">
                 You struck {material.emoji} <strong>{material.name}</strong>
               </div>
+              {badges.length > 0 && (
+                <div className="badge-row">
+                  {badges.map((b) => (
+                    <span key={b.id} className="badge" title={b.description}>
+                      {b.emoji} {b.name}
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="result-score">{depthScore(result.depth).toLocaleString()}</div>
               <div className="muted">
                 points · {pct}% deep · word {(result.index + 1).toLocaleString()} of {result.total.toLocaleString()}

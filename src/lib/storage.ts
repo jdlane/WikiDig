@@ -11,6 +11,8 @@ export interface StoredResult extends GuessResult {
   title: string;
   /** Guesses that weren't in the article, in order. Absent on results saved before lives existed. */
   misses?: string[];
+  /** The guess was the deepest possible word. Absent on results saved before badges existed. */
+  topAnswer?: boolean;
 }
 
 type ResultMap = Record<string, StoredResult>;

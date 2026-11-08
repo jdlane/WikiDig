@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Puzzle } from '../data/puzzles';
 import { extractArticle, type Article } from '../lib/extractText';
-import { applyGuess } from '../lib/scoring';
+import { applyGuess, topAnswers } from '../lib/scoring';
 import type { GameStore, StoredResult } from '../lib/storage';
 import { fetchArticleHtml } from '../lib/wikipedia';
 import { loadWordForms } from '../lib/wordForms';
@@ -66,7 +66,13 @@ export function useGame({ id, loadPuzzle, store }: GameSource) {
         store.saveMisses(outcome.misses);
       }
       if (outcome.final) {
-        const final: StoredResult = { ...outcome.final, title: state.title, misses: outcome.misses };
+        const best = topAnswers(state.article.keys, state.article.originals, 1)[0];
+        const final: StoredResult = {
+          ...outcome.final,
+          title: state.title,
+          misses: outcome.misses,
+          topAnswer: outcome.final.index >= 0 && outcome.final.index === best?.index,
+        };
         store.saveResult(final);
         setResult(final);
       }

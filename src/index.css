@@ -749,3 +749,21 @@ mark.hit.first {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 4px;
+}
+
+.badge {
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

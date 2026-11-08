@@ -16,6 +16,22 @@ describe('buildShareText', () => {
     expect(text).toContain("🔥 Earth's Core");
   });
 
+  it('adds earned badge emoji to the points line', () => {
+    const text = buildShareText('WikiDig #6', 'Bee', { ...base, index: 92, depth: 0.92, misses: [], topAnswer: true });
+    expect(text).toContain('💎 Diamond · ✨🏆');
+  });
+
+  it('adds no badge separator when none were earned', () => {
+    const text = buildShareText('WikiDig #6', 'Bee', {
+      ...base,
+      guess: 'honeycomb',
+      index: 92,
+      depth: 0.92,
+      misses: ['wings'],
+    });
+    expect(text.split('\n')[1]).toMatch(/Diamond$/);
+  });
+
   it('shows no material when every pickaxe broke', () => {
     const text = buildShareText('WikiDig #6', 'Bee', { ...base, index: -1, depth: 0, misses: ['a', 'b', 'c'] });
     expect(text).toContain('out of pickaxes');

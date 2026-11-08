@@ -37,6 +37,12 @@ describe('ResultView score bar', () => {
     expect(b).not.toContain('Next');
   });
 
+  it('shows earned badges on the result card', () => {
+    const markup = renderToStaticMarkup(<ResultView result={found} shareHeading="WikiDig #6" title="Bee" />);
+    expect(markup).toContain('class="badge-row"');
+    expect(markup).toContain('Clean Dig');
+  });
+
   it('offers the next article in endless mode', () => {
     const markup = renderToStaticMarkup(
       <ResultView result={found} shareHeading="WikiDig Endless" title="Bee" onNext={() => {}} />,
