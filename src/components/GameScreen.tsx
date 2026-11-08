@@ -54,7 +54,13 @@ export function GameScreen({ source, meta, label, shareHeading, onNext, onFinish
 
       {!result && state.status !== 'error' && (
         // Remount after each miss so the input clears and the confirm step resets.
-        <GuessForm key={misses.length} disabled={state.status !== 'ready'} misses={misses} onSubmit={submitGuess} />
+        <GuessForm
+          key={misses.length}
+          disabled={state.status !== 'ready'}
+          misses={misses}
+          onSubmit={submitGuess}
+          onSkip={onNext}
+        />
       )}
 
       {result && (

@@ -6,6 +6,8 @@ interface Props {
   /** Earlier guesses that weren't in the article. */
   misses: string[];
   onSubmit: (guess: string) => void;
+  /** Endless mode: move on without playing. Offered until a pickaxe breaks, so it can't dodge a 0. */
+  onSkip?: () => void;
 }
 
 export function Pickaxes({ used }: { used: number }) {
@@ -21,7 +23,7 @@ export function Pickaxes({ used }: { used: number }) {
   );
 }
 
-export function GuessForm({ disabled, misses, onSubmit }: Props) {
+export function GuessForm({ disabled, misses, onSubmit, onSkip }: Props) {
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -103,6 +105,13 @@ export function GuessForm({ disabled, misses, onSubmit }: Props) {
         </p>
       )}
       {disabled && <p className="muted">Loading article…</p>}
+      {onSkip && misses.length === 0 && (
+        <div className="skip-row">
+          <button className="button secondary" type="button" onClick={onSkip} disabled={disabled}>
+            Skip article
+          </button>
+        </div>
+      )}
     </form>
   );
 }

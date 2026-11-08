@@ -278,6 +278,12 @@ body {
   outline-offset: -1px;
 }
 
+.skip-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
 .confirm-text {
   margin: 0 0 14px;
   text-align: center;

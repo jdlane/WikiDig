@@ -36,7 +36,8 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         </ul>
         <p className="muted">
           <strong>Daily</strong>: a new article every day at midnight. <strong>Endless</strong>: random vital
-          articles, as many rounds as you like.
+          articles, as many rounds as you like. You can skip an article until a pickaxe breaks, and skips don't affect
+          your stats.
         </p>
       </div>
     </Modal>
