@@ -54,6 +54,16 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
 
   const share = async () => {
     const text = buildShareText(shareHeading, title, result);
+    // Native share sheet on touch devices; desktop keeps copy-to-clipboard.
+    const mobile = window.matchMedia?.('(pointer: coarse)').matches;
+    if (mobile && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return; // user closed the sheet
+      }
+    }
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
