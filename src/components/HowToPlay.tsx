@@ -32,10 +32,10 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
             Every form of a word counts as the same word: <em>beehive</em> = <em>Beehives</em>,{' '}
             <em>beekeeper</em> = <em>beekeeping</em>, <em>run</em> = <em>ran</em>.
           </li>
-          <li>The first guess that <em>is</em> in the article is final — make it count!</li>
+          <li>The first guess that <em>is</em> in the article is final, so make it count!</li>
         </ul>
         <p className="muted">
-          <strong>Daily</strong>: a new article every day at midnight. <strong>Endless</strong>: random vital
+          <strong>Daily</strong>: a new article every day at midnight. <strong>Endless</strong>: random
           articles, as many rounds as you like. You can skip an article until a pickaxe breaks, and skips don't affect
           your stats.
         </p>
