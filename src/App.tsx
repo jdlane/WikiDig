@@ -81,7 +81,7 @@ export default function App() {
             key={source.id}
             source={source}
             meta={`Endless · Round ${endlessRound}`}
-            label="Random vital article"
+            label="Random article"
             shareHeading="WikiDig Endless"
             onNext={nextEndless}
             onFinished={prefetchNextRandom}
