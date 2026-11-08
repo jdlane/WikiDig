@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:pool": "vite-node scripts/build-pool.ts"
+    "build:pool": "vite-node scripts/build-pool.ts",
+    "build:endless": "vite-node scripts/build-endless-pool.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

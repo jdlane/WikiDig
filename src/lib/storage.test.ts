@@ -1,7 +1,35 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { endlessStore, getEndlessRound, getEndlessStats, nextEndlessRound, saveEndlessRound } from './storage';
+import {
+  ENDLESS_SEEN_LIMIT,
+  addEndlessSeen,
+  endlessStore,
+  getEndlessRound,
+  getEndlessSeen,
+  getEndlessStats,
+  nextEndlessRound,
+  saveEndlessRound,
+} from './storage';
 
 beforeEach(() => localStorage.clear());
+
+describe('endless seen titles', () => {
+  it('appends titles, keeping each once', () => {
+    addEndlessSeen('Bee');
+    addEndlessSeen('Ant');
+    addEndlessSeen('Bee');
+    expect(getEndlessSeen()).toEqual(['Ant', 'Bee']);
+  });
+
+  it('drops the oldest titles past the limit', () => {
+    const full = Array.from({ length: ENDLESS_SEEN_LIMIT }, (_, i) => `T${i}`);
+    localStorage.setItem('wikidepth:endlessSeen', JSON.stringify(full));
+    addEndlessSeen('New');
+    const seen = getEndlessSeen();
+    expect(seen).toHaveLength(ENDLESS_SEEN_LIMIT);
+    expect(seen[0]).toBe('T1');
+    expect(seen.at(-1)).toBe('New');
+  });
+});
 
 describe('moving on from an unfinished endless round', () => {
   it('starts a clean round without touching stats', () => {

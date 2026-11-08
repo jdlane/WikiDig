@@ -3,7 +3,7 @@
 A daily word game played on Wikipedia articles. You see an article's title and opening sentence, then guess a single word you think first appears as far down the article as possible. The deeper the word's first appearance, the higher your score. Guess a word that isn't in the article and you lose one of your pickaxes.
 
 - **Daily**: everyone gets the same article each day, picked from Wikipedia's level-4 vital articles.
-- **Endless**: random vital articles, as many rounds as you like.
+- **Endless**: random level-4 and level-5 vital articles, as many rounds as you like, without repeats.
 
 ## Development
 

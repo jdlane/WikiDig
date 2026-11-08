@@ -159,6 +159,22 @@ export function nextEndlessRound(): EndlessRound {
   return next;
 }
 
+const ENDLESS_SEEN_KEY = 'wikidepth:endlessSeen';
+/** Most recent endless titles remembered, so storage stays bounded. */
+export const ENDLESS_SEEN_LIMIT = 5000;
+
+/** Titles already shown in endless mode, oldest first. */
+export function getEndlessSeen(): string[] {
+  const seen = readJson<unknown>(ENDLESS_SEEN_KEY, []);
+  return Array.isArray(seen) ? seen.filter((t): t is string => typeof t === 'string') : [];
+}
+
+export function addEndlessSeen(title: string): void {
+  const seen = getEndlessSeen().filter((t) => t !== title);
+  seen.push(title);
+  writeJson(ENDLESS_SEEN_KEY, seen.slice(-ENDLESS_SEEN_LIMIT));
+}
+
 export interface EndlessStats {
   played: number;
   totalDepth: number;
