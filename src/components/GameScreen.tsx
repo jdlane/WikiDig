@@ -15,10 +15,12 @@ interface Props {
   onNext?: () => void;
   /** Called once the game has a result (e.g. to start fetching the next article). */
   onFinished?: () => void;
+  /** Daily mode: the date key the score is ranked under. */
+  rankingDate?: string;
 }
 
 /** One playable game. Mount with a `key` per game so state resets between games. */
-export function GameScreen({ source, meta, label, shareHeading, onNext, onFinished }: Props) {
+export function GameScreen({ source, meta, label, shareHeading, onNext, onFinished, rankingDate }: Props) {
   const { state, puzzle, result, misses, submitGuess, retry } = useGame(source);
   const title = state.status === 'ready' ? state.title : (puzzle?.title ?? result?.title ?? null);
 
@@ -65,7 +67,13 @@ export function GameScreen({ source, meta, label, shareHeading, onNext, onFinish
 
       {result && (
         <>
-          <ResultView result={result} shareHeading={shareHeading} title={result.title} onNext={onNext} />
+          <ResultView
+            result={result}
+            shareHeading={shareHeading}
+            title={result.title}
+            onNext={onNext}
+            rankingDate={rankingDate}
+          />
           {state.status === 'ready' && <TopAnswers article={state.article} guess={result.guess} />}
           {state.status === 'ready' && (
             <ArticleReveal

@@ -635,6 +635,54 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Global ranking (daily) */
+.ranking {
+  margin: 16px 0 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.ranking-headline {
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.ranking-headline strong {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 72px;
+}
+
+.histogram-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.histogram-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: var(--soil-2);
+}
+
+.histogram-bar.mine {
+  background: var(--accent);
+}
+
+.histogram-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+
 /* Top answers */
 .top-heading {
   margin: 0 0 10px;

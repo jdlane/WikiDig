@@ -75,6 +75,7 @@ export default function App() {
             meta={`#${puzzleNumber} · ${date}`}
             label="Today's article"
             shareHeading={`WikiDig #${puzzleNumber}`}
+            rankingDate={todayKey}
           />
         ) : (
           <GameScreen

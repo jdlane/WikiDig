@@ -5,6 +5,7 @@ import { depthPercent, depthScore, materialFor } from '../lib/scoring';
 import { buildShareText } from '../lib/share';
 import type { StoredResult } from '../lib/storage';
 import { Pickaxes } from './GuessForm';
+import { Ranking } from './Ranking';
 import { ScoreBar, isScrolledPast } from './ScoreBar';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
   title: string;
   /** Endless mode: offer the next article instead of a countdown. */
   onNext?: () => void;
+  /** Daily mode: the date to submit this score under and rank it against. */
+  rankingDate?: string;
 }
 
 function formatCountdown(ms: number): string {
@@ -33,7 +36,7 @@ function Countdown() {
   return <p className="muted countdown">Next article in {formatCountdown(remaining)}</p>;
 }
 
-export function ResultView({ result, shareHeading, title, onNext }: Props) {
+export function ResultView({ result, shareHeading, title, onNext, rankingDate }: Props) {
   const [copied, setCopied] = useState(false);
   const [pinned, setPinned] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
@@ -142,6 +145,7 @@ export function ResultView({ result, shareHeading, title, onNext }: Props) {
           )}
         </div>
       </div>
+      {rankingDate && <Ranking dateKey={rankingDate} score={depthScore(result.depth)} />}
       <div className="button-row">
         <button className={onNext ? 'button secondary' : 'button primary'} onClick={share}>
           {copied ? 'Copied!' : 'Share result'}

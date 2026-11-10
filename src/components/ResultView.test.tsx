@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { StoredResult } from '../lib/storage';
+import { RankingPanel } from './Ranking';
 import { ResultView } from './ResultView';
 import { isScrolledPast } from './ScoreBar';
 
@@ -55,5 +56,33 @@ describe('ResultView score bar', () => {
     const b = bar(renderToStaticMarkup(<ResultView result={lost} shareHeading="WikiDig #6" title="Bee" />));
     expect(b).toContain('Out of pickaxes');
     expect(b).toContain('score-bar-score miss');
+  });
+});
+
+describe('RankingPanel', () => {
+  const ranked = { ranked: true, beaten: 0.8, buckets: [0, 0, 0.05, 0.1, 0.14, 0.19, 0.24, 0.14, 0.14, 0] };
+
+  it('stays hidden until the server ranks the day', () => {
+    const unranked = { ranked: false, beaten: 0, buckets: Array(10).fill(0) };
+    expect(renderToStaticMarkup(<RankingPanel ranking={unranked} score={8734} />)).toBe('');
+  });
+
+  it('shows the percentile and histogram once ranked, highlighting the player’s bar', () => {
+    const markup = renderToStaticMarkup(<RankingPanel ranking={ranked} score={8734} />);
+    expect(markup).toContain('<strong>80%</strong>');
+    expect(markup.match(/histogram-bar/g)).toHaveLength(10);
+    expect(markup.match(/histogram-bar mine/g)).toHaveLength(1);
+  });
+
+  it('never mentions a player count', () => {
+    const markup = renderToStaticMarkup(<RankingPanel ranking={ranked} score={8734} />);
+    expect(markup).not.toMatch(/\d+ players/);
+  });
+
+  it('is not shown on the result card until the ranking loads', () => {
+    const markup = renderToStaticMarkup(
+      <ResultView result={found} shareHeading="WikiDig #6" title="Bee" rankingDate="2026-11-09" />,
+    );
+    expect(markup).not.toContain('class="ranking"');
   });
 });
